@@ -8,20 +8,23 @@ const times = Object.freeze({
     month: 1000 * 60 * 60 * 24 * 7 * 2 * 2,
 })
 
+// helper function to display text to the output box
 function output(text) {
     const display = document.querySelector('.output')
     display.textContent = text
 }
-function applyInputVisual(text, colorFlashColor) {
+// helper function to set the placeholder of the input box
+function setInputPlaceholder(text) {
     input.placeholder = text
-    if(colorFlashColor) {
-        input.style.backgroundColor = colorFlashColor
+}
+
         setTimeout(() => {
             input.style.backgroundColor = 'white'
         }, 250)
     }
 }
 
+// setup the input to step through the iterator controlling the flow of the application
 const input = document.querySelector('.input')
 input.addEventListener('keypress', e => {
     if(event.which == 13) {
@@ -32,11 +35,9 @@ input.addEventListener('keypress', e => {
     }
 })
 
+// helper function to sanitise text
 function sanitise(text) {
     return text.trim().replace(/ /g, '').toLowerCase()
-}
-function weightedRandom(min, max) {
-    return Math.floor(Math.abs(Math.random() - Math.random()) * (1 + max - min) + min)
 }
 
 const questionProto = {
@@ -54,6 +55,14 @@ const questionProto = {
     get answerText() {
         return testingGerman ? this.sanitisedEnglish : this.sanitisedGerman
     },
+    // set the streak values to those expected when the answer is right or wrong
+    answeredRight() {
+        if(this.correctAnswerStreak == -1) this.correctAnswerStreak = 1
+        else this.correctAnswerStreak ++
+    },
+    answeredWrong() {
+        this.correctAnswerStreak = -1
+    },
     // by passing in the question text and the user's answer text and seeing if they both match, isCorrectAnswer works without
     // needing to know whether german or english is being tested
     isCorrectAnswer(german, english) {
@@ -61,11 +70,14 @@ const questionProto = {
     }
 }
 
-function createQuestion(german, english, lastAsked, frequency, difficulty = 3, answered = 0) {
+// factory for creating question object
+function createQuestion(german, english, difficulty = 3, weighting = 10, correctAnswerStreak = 0) {
     const question = Object.create(questionProto)
     question.german = german
     question.english = english
     question.difficulty = difficulty
+    question.weighting = weighting
+    question.correctAnswerStreak = correctAnswerStreak
 
     return question
 }
@@ -75,75 +87,75 @@ const it = (function() {
     const questions = [
         createQuestion('bald', 'soon'),
         createQuestion('bis', 'until'),
-        createQuestion('hallo', 'hello')
+        createQuestion('hallo', 'hello'),
+        createQuestion('tschuss', 'see you'),
+        createQuestion('eher', 'rather'),
     ]
-
-    const questionQueue = []
-    function initialiseQuestionQueue() {
-        questions.forEach(question => {
-            for(let i = 0; i < question.difficulty; i++) {
-                const index = Math.floor(Math.random() * questionQueue.length)
-                questionQueue.splice(index, 0, question)
-            }
-            separateIdenticalQuestions()
-        })
+    // questions are weighted based on how likely they are to be asked
+    function getWeightingTotal() {
+        return questions.reduce((total, question) => total += question.weighting, 0)
     }
-    initialiseQuestionQueue()
-
-    // adds more of a question into the question queue, weighted towards the lower end
-    function spliceQuestions(question, times) {
-        for(let i = 0; i < times; i++) {
-            // randomly choose the index; more likely to be closer to the start
-            let index = weightedRandom(0, questionQueue.length)
-            if(index == 0) index ++ // don't allow the question to be placed at front of list
-            questionQueue.splice(index, 0, question)
-        }
-    }
-    // retrieves a random question which is not the same question as the argument
-    function getOtherQuestion(question) {
-        let counter = 0
-        let otherQuestion = question
-        while(otherQuestion == question) {
-            counter ++
-            otherQuestion = questions[Math.floor(Math.random() * questions.length)]
-            // prevent infinite loop
-            if(counter >= 500) {
-                console.error('Only argument question exists')
-                break;
+    // selects a random question which was not the most recently asked question
+    let lastQuestion
+    function pickQuestion() {
+        // pick a random number below the weight total
+        const totalWeighting = getWeightingTotal()
+        const pickIndex = Math.floor(Math.random() * totalWeighting)
+        // iterate through the array. effectively decrease the random number by the sum of all weightings of questions iterated past
+        // if the weighting of the question is bigger than the random number, this means that the the number corresponds to that question
+        for(let i = 0, j = 0; i < questions.length; j += questions[i].weighting, i++) {
+            if(questions[i].weighting > pickIndex - j) {
+                // don't allow duplicates
+                if(lastQuestion == questions[i]) return pickQuestion()
+                else {
+                    lastQuestion = questions[i]
+                    return questions[i]
+                }
             }
         }
-        return otherQuestion
+        console.error('Failed to select question.')
     }
-    // stops the question queue from containing the same question multiple times in a row
-    function separateIdenticalQuestions() {
-        // loop through queue backwards so that splicing doesn't interfere with looping
-        for(let i = questionQueue.length; i > 1; i--) {
-            if(questionQueue[i - 1] == questionQueue[i - 2]) {
-                questionQueue.splice(i - 1, 0, getOtherQuestion(questionQueue[i - 1]))
+    // checks to see whether all of the questions have been answered to the point at which they drop to low priority
+    function areAllAnswered() {
+        for(let i = 0; i < questions.length; i ++) {
+            if(questions[i].weighting != 1) {
+                return false
             }
         }
+        return true
     }
 
     function *eventLoop() {
+        // iterate through until a break is called
         while(true) {
-            applyInputVisual('Enter text here')
-            const currentQuestion = questionQueue.shift()
+            // display the new question
+            setInputPlaceholder('Enter text here')
+            const currentQuestion = pickQuestion()
             output(currentQuestion.text)
-
+            
             const userInput = yield
-            if(sanitise(userInput) == currentQuestion.answerText)
-                applyInputVisual('Enter text here')
+            // if user input is correct, mark it as so and move to next question
+            if(sanitise(userInput) == currentQuestion.answerText) {
+                currentQuestion.answeredRight()
+                // check if question has been answered enough to drop in priority
+                if(currentQuestion.correctAnswerStreak == currentQuestion.difficulty) {
+                    currentQuestion.weighting = 1
+
+                    if(areAllAnswered()) {
+                        output('All questions answered')
+                        break;
+                    }
+                }
+            }
+            // if the user input is false, mark is as so and pause
             else {
-                applyInputVisual('Incorrect. Press any key to continue', 'red')
-                spliceQuestions(currentQuestion, currentQuestion.difficulty)
-                separateIdenticalQuestions()
-                console.log(questionQueue)
+                setInputPlaceholder('Incorrect. Press any key to continue')
+                currentQuestion.weighting += getWeightingTotal() * 0.75
+                currentQuestion.answeredWrong()
                 yield
             }
-
         }
     }
-
     return eventLoop()
 })()
 it.next()
