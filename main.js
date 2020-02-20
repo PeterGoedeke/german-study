@@ -18,10 +18,34 @@ function setInputPlaceholder(text) {
     input.placeholder = text
 }
 
+// set the colours of the streak boxes to their appropriate values based on the correct answer streak of the current question
+function setStreakVisual(streak, justChanged = false) {
+    const streaks = [
+        document.querySelector('.streak1'),
+        document.querySelector('.streak2'),
+        document.querySelector('.streak3')
+    ]
+    // apply a transition which will make the streak box 'pop' for 200ms
+    function popEffect(element) {
+        element.style.transform = 'scale(1.3)'
+        element.style.zIndex = '2'
         setTimeout(() => {
-            input.style.backgroundColor = 'white'
-        }, 250)
+            element.style.transform = ''
+            element.style.zIndex = 'initial'
+        }, 200)
     }
+    // set the colours of the boxes based on correct answer streak
+    if(streak == -1) {
+        if(justChanged) popEffect(streaks[0])
+        streaks[0].style.backgroundColor = 'red'
+        streaks[1].style.backgroundColor = 'white'
+        streaks[2].style.backgroundColor = 'white'
+        return
+    }
+    for(let i = 0; i < streaks.length; i++) {
+        streaks[i].style.backgroundColor = (i < streak ? 'green' : 'white')
+    }
+    if(justChanged) popEffect(streaks[streak - 1])
 }
 
 // setup the input to step through the iterator controlling the flow of the application
@@ -131,12 +155,14 @@ const it = (function() {
             // display the new question
             setInputPlaceholder('Enter text here')
             const currentQuestion = pickQuestion()
+            setTimeout(() => setStreakVisual(currentQuestion.correctAnswerStreak), 200)
             output(currentQuestion.text)
             
             const userInput = yield
             // if user input is correct, mark it as so and move to next question
             if(sanitise(userInput) == currentQuestion.answerText) {
                 currentQuestion.answeredRight()
+                setStreakVisual(currentQuestion.correctAnswerStreak, true)
                 // check if question has been answered enough to drop in priority
                 if(currentQuestion.correctAnswerStreak == currentQuestion.difficulty) {
                     currentQuestion.weighting = 1
@@ -152,6 +178,7 @@ const it = (function() {
                 setInputPlaceholder('Incorrect. Press any key to continue')
                 currentQuestion.weighting += getWeightingTotal() * 0.75
                 currentQuestion.answeredWrong()
+                setStreakVisual(currentQuestion.correctAnswerStreak, true)
                 yield
             }
         }

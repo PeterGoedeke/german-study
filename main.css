@@ -70,3 +70,29 @@ CSS starts here---------------------------------------------------------------
     text-align: center;
     grid-area: input;
 }
+
+.streakBox {
+    grid-area: points;
+    display: grid;
+    grid-template-columns: 30fr 20fr 20fr 30fr;
+    grid-template-rows: 30fr 20fr 20fr 30fr;
+    grid-template-areas: 
+        ". . . ."
+        ". streak1 streak2 ."
+        ". streak3 streak3 ."
+        ". . . .";
+}
+.streak1, .streak2, .streak3 {
+    border: solid green 1px;
+    transition: all 0.2s ease;
+    transform: scale(1)
+}
+.streak1 {
+    grid-area: streak1;
+}
+.streak2 {
+    grid-area: streak2;
+}
+.streak3 {
+    grid-area: streak3;
+}
