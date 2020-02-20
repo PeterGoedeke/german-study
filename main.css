@@ -62,9 +62,11 @@ CSS starts here---------------------------------------------------------------
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
     font-weight: 600;
     font-size: 2em;
     grid-area: display;
+    white-space: pre-line;
 }
 .input {
     text-align: center;

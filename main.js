@@ -77,6 +77,9 @@ const questionProto = {
         return testingGerman ? this.german : this.english
     },
     get answerText() {
+        return testingGerman ? this.english : this.german
+    },
+    get answerTextSanitised() {
         return testingGerman ? this.sanitisedEnglish : this.sanitisedGerman
     },
     // set the streak values to those expected when the answer is right or wrong
@@ -160,7 +163,7 @@ const it = (function() {
             
             const userInput = yield
             // if user input is correct, mark it as so and move to next question
-            if(sanitise(userInput) == currentQuestion.answerText) {
+            if(sanitise(userInput) == currentQuestion.answerTextSanitised) {
                 currentQuestion.answeredRight()
                 setStreakVisual(currentQuestion.correctAnswerStreak, true)
                 // check if question has been answered enough to drop in priority
@@ -176,6 +179,7 @@ const it = (function() {
             // if the user input is false, mark is as so and pause
             else {
                 setInputPlaceholder('Incorrect. Press any key to continue')
+                output(`Correct answer:\n${currentQuestion.answerText}`)
                 currentQuestion.weighting += getWeightingTotal() * 0.75
                 currentQuestion.answeredWrong()
                 setStreakVisual(currentQuestion.correctAnswerStreak, true)
