@@ -42,6 +42,12 @@ function setStreakVisual(streak, justChanged = false) {
         streaks[2].style.backgroundColor = 'white'
         return
     }
+    // stop higher streaks from attempting to access non-existant array elements
+    if(streak > 3) {
+        streak = 3
+        justChanged = false
+    }
+
     for(let i = 0; i < streaks.length; i++) {
         streaks[i].style.backgroundColor = (i < streak ? 'green' : 'white')
     }
