@@ -65,28 +65,25 @@ input.addEventListener('keypress', e => {
     }
 })
 
-// helper function to sanitise text
+// helper function to sanitise text or each element of an array
 function sanitise(text) {
+    if(Array.isArray(text)) {
+        const newArray = text.map(element => sanitise(element))
+        return newArray
+    }
     return text.trim().replace(/ /g, '').toLowerCase()
 }
 
 const questionProto = {
-    // convenient to have the question contain its sanitised texts for answer checking
-    get sanitisedGerman() {
-        return sanitise(this.german)
-    },
-    get sanitisedEnglish() {
-        return sanitise(this.english)
-    },
     // convenient to have the question be aware of which language is the answer and which is the question
-    get text() {
+    get rawText() {
         return testingGerman ? this.german : this.english
     },
-    get answerText() {
-        return testingGerman ? this.english : this.german
+    get text() {
+        return this.rawText.join(', ')
     },
-    get answerTextSanitised() {
-        return testingGerman ? this.sanitisedEnglish : this.sanitisedGerman
+    get answerText() {
+        return testingGerman ? this.english.join(', ') : this.german.join(', ')
     },
     // set the streak values to those expected when the answer is right or wrong
     answeredRight() {
@@ -98,8 +95,10 @@ const questionProto = {
     },
     // by passing in the question text and the user's answer text and seeing if they both match, isCorrectAnswer works without
     // needing to know whether german or english is being tested
-    isCorrectAnswer(german, english) {
-        return sanitise(german) == this.sanitisedGerman && sanitise(english) == this.sanitisedEnglish
+    isCorrectAnswer(userInput, question) {
+        // if english contains user input and german is question or vice versa
+        return sanitise(this.english).includes(sanitise(userInput)) && question === this.german
+            || sanitise(this.german).includes(sanitise(userInput)) && question === this.english
     }
 }
 
@@ -118,11 +117,9 @@ function createQuestion(german, english, difficulty = 3, weighting = 10, correct
 let testingGerman = true
 const it = (function() {
     const questions = [
-        createQuestion('bald', 'soon'),
-        createQuestion('bis', 'until'),
-        createQuestion('hallo', 'hello'),
-        createQuestion('tschuss', 'see you'),
-        createQuestion('eher', 'rather'),
+        createQuestion(['die Abhandlung'], ['essay', 'treatise', 'paper']),
+        createQuestion(['das Abseits'], ['aside', 'apart', 'away']),
+        createQuestion(['brummig', 'griesgrämig'], ['grumpy', 'moody'])
     ]
     // questions are weighted based on how likely they are to be asked
     function getWeightingTotal() {
@@ -169,7 +166,7 @@ const it = (function() {
             
             const userInput = yield
             // if user input is correct, mark it as so and move to next question
-            if(sanitise(userInput) == currentQuestion.answerTextSanitised) {
+            if(currentQuestion.isCorrectAnswer(userInput, currentQuestion.rawText)) {
                 currentQuestion.answeredRight()
                 setStreakVisual(currentQuestion.correctAnswerStreak, true)
                 // check if question has been answered enough to drop in priority
