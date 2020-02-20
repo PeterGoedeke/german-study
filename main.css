@@ -51,7 +51,11 @@ CSS starts here---------------------------------------------------------------
 
 .container {
     display: grid;
-    grid-template-rows: [output] 95fr [input] 15fr;
+    grid-template-columns: 10fr 80fr 10fr; 
+    grid-template-rows: 95fr 15fr;
+    grid-template-areas:
+        "display display display"
+        "points input submit";
     height: 100vh;
 }
 .output {
@@ -60,7 +64,9 @@ CSS starts here---------------------------------------------------------------
     justify-content: center;
     font-weight: 600;
     font-size: 2em;
+    grid-area: display;
 }
 .input {
     text-align: center;
+    grid-area: input;
 }
