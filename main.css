@@ -49,8 +49,43 @@ CSS starts here---------------------------------------------------------------
 ------------------------------------------------------------------------------
 */
 
-.quizContainer {
+.menuContainer {
     display: grid;
+    grid-template-columns: 10fr 80fr 10fr;
+    grid-template-rows: 5fr 10fr 80fr 5fr;
+    grid-template-areas:
+        ". . ."
+        ". header ."
+        ". list ."
+        ". . .";
+    height: 100vh;
+}
+.buttons {
+    grid-area: header;
+    border: solid black 1px;
+}
+.lists {
+    grid-area: list;
+    border: solid black 1px;
+}
+.list {
+    height: 30px;
+    border-bottom: solid lightgrey 1px;
+    display: flex;
+    align-items: center;
+}
+.german, .english, .variable {
+    height: 25px;
+    width: 25px;
+    border: solid lightgrey 1px;
+}
+
+.listPreviewContainer {
+    display: none;
+}
+
+.quizContainer {
+    display: none;
     grid-template-columns: 10fr 80fr 10fr; 
     grid-template-rows: 95fr 15fr;
     grid-template-areas:

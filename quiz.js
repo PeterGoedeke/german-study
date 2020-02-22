@@ -56,6 +56,7 @@ function setStreakVisual(streak, justChanged = false) {
 }
 
 // setup the input to step through the iterator controlling the flow of the application
+let it
 const input = document.querySelector('.input')
 input.addEventListener('keypress', e => {
     if(event.which == 13) {
