@@ -51,6 +51,7 @@ function setStreakVisual(streak, justChanged = false) {
     for(let i = 0; i < streaks.length; i++) {
         streaks[i].style.backgroundColor = (i < streak ? 'green' : 'white')
     }
+    console.log(streak)
     if(justChanged) popEffect(streaks[streak - 1])
 }
 
@@ -74,6 +75,12 @@ function sanitise(text) {
     return text.trim().replace(/ /g, '').toLowerCase()
 }
 
+const s = Object.freeze({
+    WRONG: 0,
+    CORRECT: 1,
+    TYPO: 2,
+    WRONGARTICLE: 3
+})
 const questionProto = {
     // convenient to have the question be aware of which language is the answer and which is the question
     get rawText() {
@@ -93,34 +100,46 @@ const questionProto = {
     answeredWrong() {
         this.correctAnswerStreak = -1
     },
+    // return the appropriate values based on which is being tested
+    get weighting() {
+        return (testingGerman ? this.weightGerman : this.weightEnglish)
+    },
+    set weighting(x) {
+        if(testingGerman) this.weightGerman = x
+        else this.weightEnglish = x
+    },
+    get correctAnswerStreak() {
+        return (testingGerman ? this.streakGerman : this.streakEnglish)
+    },
+    set correctAnswerStreak(x) {
+        if(testingGerman) this.streakGerman = x
+        else this.streakEnglish = x
+    },
     // by passing in the question text and the user's answer text and seeing if they both match, isCorrectAnswer works without
     // needing to know whether german or english is being tested
     isCorrectAnswer(userInput, question) {
         // if english contains user input and german is question or vice versa
+        if(question === this.german) {
+
+        }
+
         return sanitise(this.english).includes(sanitise(userInput)) && question === this.german
             || sanitise(this.german).includes(sanitise(userInput)) && question === this.english
     }
 }
 
 // factory for creating question object
-function createQuestion(german, english, difficulty = 3, weighting = 10, correctAnswerStreak = 0) {
-    const question = Object.create(questionProto)
-    question.german = german
-    question.english = english
-    question.difficulty = difficulty
-    question.weighting = weighting
-    question.correctAnswerStreak = correctAnswerStreak
-
+function createQuestion(german, english, difficulty = 3, weightGerman = 10, weightEnglish = 10, streakGerman = 0, streakEnglish = 0) {
+    const question = Object.assign(Object.create(questionProto), {
+        german, english, difficulty, weightGerman, weightEnglish, streakGerman, streakEnglish
+    })
     return question
 }
 
+let testingVariable = false
 let testingGerman = true
-const it = (function() {
-    const questions = [
-        createQuestion(['die Abhandlung'], ['essay', 'treatise', 'paper']),
-        createQuestion(['das Abseits'], ['aside', 'apart', 'away']),
-        createQuestion(['brummig', 'griesgrämig'], ['grumpy', 'moody'])
-    ]
+const getIterator = (function() {
+    let questions = []
     // questions are weighted based on how likely they are to be asked
     function getWeightingTotal() {
         return questions.reduce((total, question) => total += question.weighting, 0)
@@ -155,7 +174,11 @@ const it = (function() {
         return true
     }
 
-    function *eventLoop() {
+    function *eventLoop(questionsParam, testingGermanParam, testingVariableParam = false) {
+        // pass through parameters and use them within the scope of the whole IIFE to define quiz settings
+        questions = questionsParam
+        testingGerman = testingGermanParam
+        testingVariable = testingVariableParam
         // iterate through until a break is called
         while(true) {
             // display the new question
@@ -163,6 +186,8 @@ const it = (function() {
             const currentQuestion = pickQuestion()
             setTimeout(() => setStreakVisual(currentQuestion.correctAnswerStreak), 200)
             output(currentQuestion.text)
+            
+            if(testingVariable) testingGerman = Math.random() < 0.5
             
             const userInput = yield
             // if user input is correct, mark it as so and move to next question
@@ -190,8 +215,5 @@ const it = (function() {
             }
         }
     }
-    return eventLoop()
+    return eventLoop
 })()
-it.next()const questions = loadQuestionList('questions')
-let it = getIterator(questions)
-it.next()
