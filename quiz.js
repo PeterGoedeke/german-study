@@ -185,10 +185,9 @@ const getIterator = (function() {
             // display the new question
             setInputPlaceholder('Enter text here')
             const currentQuestion = pickQuestion()
+            if(testingVariable) testingGerman = Math.random() < 0.5
             setTimeout(() => setStreakVisual(currentQuestion.correctAnswerStreak), 200)
             output(currentQuestion.text)
-            
-            if(testingVariable) testingGerman = Math.random() < 0.5
             
             const userInput = yield
             // if user input is correct, mark it as so and move to next question
