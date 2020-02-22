@@ -49,7 +49,7 @@ CSS starts here---------------------------------------------------------------
 ------------------------------------------------------------------------------
 */
 
-.container {
+.quizContainer {
     display: grid;
     grid-template-columns: 10fr 80fr 10fr; 
     grid-template-rows: 95fr 15fr;

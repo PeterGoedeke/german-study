@@ -1,0 +1,26 @@
+{
+  "name": "german-quiz",
+  "productName": "Vocabulary Builder",
+  "version": "1.0.0",
+  "main": "window.js",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "node-xlsx": "^0.15.0"
+  },
+  "devDependencies": {
+    "electron": "^2.0.2",
+    "electron-packager": "^12.1.0"
+  },
+  "electronPackagerConfig": {
+    "packageManager": "npm",
+    "asar": true
+  },
+  "scripts": {
+    "start": "electron .",
+    "package-win": "electron-packager . reviewer-filter --overwrite --platform=win32 --arch=x64 --prune=true --out=release-builds --version-string.CompanyName=Peter Goedeke --version-string.FileDescription=Reiewer Filter --version-string.ProductName='Reviewer Filter' ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
