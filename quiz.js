@@ -184,8 +184,13 @@ const getIterator = (function() {
     // checks to see whether all of the questions have been answered to the point at which they drop to low priority
     function areAllAnswered() {
         for(let i = 0; i < questions.length; i ++) {
-            if(questions[i].weighting != 1) {
+            if(!testingVariable && questions[i].weighting != 1) {
                 return false
+            }
+            if(testingVariable) {
+                if(questions[i].weightGerman != 1 || questions[i].weightEnglish != 1) {
+                    return false
+                }
             }
         }
         return true
