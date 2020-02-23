@@ -25,7 +25,7 @@ function saveQuestionList(filePath, questions) {
 function importFromExcel(filePath) {
     const spreadSheet = xlsx.parse(fs.readFileSync(`./lists/${filePath}.xlsx`));
     const questions = []
-    spreadSheet[0].data.forEach(row => questions.push(createQuestion(row[0], row[1])))
+    spreadSheet[0].data.forEach(row => questions.push(createQuestion(getAnswersFromString(row[0]), getAnswersFromString(row[1]))))
     return questions
 }
 // returns all JSON files in the main lists directory
