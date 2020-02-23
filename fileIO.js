@@ -13,13 +13,13 @@ function loadQuestionList(filePath) {
     const data = JSON.parse(fs.readFileSync(`./lists/${filePath}`, 'ascii'))
     const questions = []
     data.forEach(q => questions.push(createQuestion(
-        q.german, q.english, q.difficulty, q.weightGerman, q.weightEnglish, q.streakGerman, q.streakEnglish
+        q.german, q.english, q.difficulty, q.weightGerman, q.weightEnglish, q.streakGerman, q.streakEnglish, q.reanswerTimeGerman, q.reanswerTimeEnglish, q.lastAnsweredGerman, q.lastAnsweredEnglish, q.locked
     )))
     return questions
 }
 // save a question array to JSON file
 function saveQuestionList(filePath, questions) {
-    fs.writeFileSync(`./lists/${filePath}.json`, JSON.stringify(questions, null, 4), 'ascii')
+    fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'ascii')
 }
 // read an excel table into an array of questions
 function importFromExcel(filePath) {

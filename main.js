@@ -3,9 +3,10 @@ function getCompletionPercentage(questions) {
     return questions.reduce((total, question) => total += (question.weighting == 1), 0) / questions.length * 100 + '%'
 }
 
-const listPreviewHandler = (function() {
+const listHandler = (function() {
     // variables to pass to the quiz mainLoop when start buton clicked
     let listQuestions = []
+    let listName
     let testingGerman = true
     let testingVariable = false
     // adding event listeners to allow for setting of said varaibles by user
@@ -36,16 +37,38 @@ const listPreviewHandler = (function() {
         it = getIterator(listQuestions, testingGerman, testingVariable)
         it.next()
     }
+
+    // set all questions marked as answered which are ready for answering to the default weighting
+    function refreshQuestionWeightings() {
+        listQuestions.forEach(question => {
+            if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now()) {
+                question.weightGerman = DEFAULTWEIGHT
+                question.lastAnsweredGerman = 0
+                question.streakGerman = 0
+            }
+            if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now()) {
+                question.weightEnglish = DEFAULTWEIGHT
+                question.lastAnsweredEnglish = 0
+                question.streakEnglish = 0
+            }
+        })
+    }
+
     return {
         // allows the list of questions to be set by the pane handler when the active pane changes to the list preview pane
-        assignList(questions) {
+        assignList(questions, list) {
             listQuestions = questions
-            this.updatePercentage()
+            listName = list
+            // saveQuestionList('questions.json', questions)
         },
-        // sets the percentage learned icon to its appropriate value
-        updatePercentage() {
+        // sets the percentage learned icon to its appropriate value and show a preview of the questions =
+        updateDisplay() {
             const listPreviewHeaderSubPane = document.querySelector('.sbHeader')
             listPreviewHeaderSubPane.textContent = getCompletionPercentage(listQuestions)
+            refreshQuestionWeightings()
+        },
+        get path() {
+            return listName
         }
     }
 })()
@@ -104,14 +127,14 @@ const panes = (function() {
             backButton.style.display = 'block'
 
             swapMenuPanes(false, true, false)
-            // pass relevant information to the listPreviewHandler if there is information to pass
-            // if nothing is passed the listPreviewHandler will still contain the information from last time
+            // pass relevant information to the listHandler if there is information to pass
+            // if nothing is passed the listHandler will still contain the information from last time
             // nothing is passed when the back button is pressed
             if(list) {
                 const questions = loadQuestionList(list)
-                listPreviewHandler.assignList(questions)
+                listHandler.assignList(questions, list)
             }
-            listPreviewHandler.updatePercentage()
+            listHandler.updateDisplay()
         },
         quiz() {
             currentPane = 'quiz'

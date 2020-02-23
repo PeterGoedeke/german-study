@@ -7,6 +7,7 @@ const times = Object.freeze({
     fortnight: 1000 * 60 * 60 * 24 * 7 * 2,
     month: 1000 * 60 * 60 * 24 * 7 * 2 * 2,
 })
+const DEFAULTWEIGHT = 10
 
 // helper function to display text to the output box
 function output(text) {
@@ -51,7 +52,6 @@ function setStreakVisual(streak, justChanged = false) {
     for(let i = 0; i < streaks.length; i++) {
         streaks[i].style.backgroundColor = (i < streak ? 'green' : 'white')
     }
-    console.log(streak)
     if(justChanged) popEffect(streaks[streak - 1])
 }
 
@@ -97,9 +97,16 @@ const questionProto = {
     answeredRight() {
         if(this.correctAnswerStreak == -1) this.correctAnswerStreak = 1
         else this.correctAnswerStreak ++
+
+        // if question has been answered to completion, reduce priority
+        if(this.correctAnswerStreak == this.difficulty) {
+            this.weighting = 1
+            this.lastAnswered = Date.now()
+        }
     },
     answeredWrong() {
         this.correctAnswerStreak = -1
+        this.lastAnswered = 0
     },
     // return the appropriate values based on which is being tested
     get weighting() {
@@ -116,6 +123,13 @@ const questionProto = {
         if(testingGerman) this.streakGerman = x
         else this.streakEnglish = x
     },
+    get lastAnswered() {
+        return (testingGerman ? this.lastAnsweredGerman : this.lastAnsweredEnglish)
+    },
+    set lastAnswered(x) {
+        if(testingGerman) this.lastAnsweredGerman = x
+        else this.lastAnsweredEnglish = x
+    },
     // by passing in the question text and the user's answer text and seeing if they both match, isCorrectAnswer works without
     // needing to know whether german or english is being tested
     isCorrectAnswer(userInput, question) {
@@ -130,9 +144,11 @@ const questionProto = {
 }
 
 // factory for creating question object
-function createQuestion(german, english, difficulty = 3, weightGerman = 10, weightEnglish = 10, streakGerman = 0, streakEnglish = 0) {
+function createQuestion(german, english, difficulty = 3, weightGerman = DEFAULTWEIGHT, weightEnglish = DEFAULTWEIGHT, streakGerman = 0,
+    streakEnglish = 0, reanswerTimeGerman = times.hour, reanswerTimeEnglish = times.hour, lastAnsweredGerman = 0, lastAnsweredEnglish = 0, locked = false
+) {
     const question = Object.assign(Object.create(questionProto), {
-        german, english, difficulty, weightGerman, weightEnglish, streakGerman, streakEnglish
+        german, english, difficulty, weightGerman, weightEnglish, streakGerman, streakEnglish, reanswerTimeGerman, reanswerTimeEnglish, lastAnsweredGerman, lastAnsweredEnglish, locked
     })
     return question
 }
@@ -193,15 +209,12 @@ const getIterator = (function() {
             // if user input is correct, mark it as so and move to next question
             if(currentQuestion.isCorrectAnswer(userInput, currentQuestion.rawText)) {
                 currentQuestion.answeredRight()
+                saveQuestionList(listHandler.path, questions)
                 setStreakVisual(currentQuestion.correctAnswerStreak, true)
-                // check if question has been answered enough to drop in priority
-                if(currentQuestion.correctAnswerStreak == currentQuestion.difficulty) {
-                    currentQuestion.weighting = 1
-
-                    if(areAllAnswered()) {
-                        output('All questions answered')
-                        break;
-                    }
+                // check if all questions have been answered
+                if(areAllAnswered()) {
+                    output('All questions answered')
+                    break;
                 }
             }
             // if the user input is false, mark is as so and pause
@@ -210,6 +223,7 @@ const getIterator = (function() {
                 output(`Correct answer:\n${currentQuestion.answerText}`)
                 currentQuestion.weighting += getWeightingTotal() * 0.4
                 currentQuestion.answeredWrong()
+                saveQuestionList(listHandler.path, questions)
                 setStreakVisual(currentQuestion.correctAnswerStreak, true)
                 yield
             }
