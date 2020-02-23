@@ -74,14 +74,61 @@ CSS starts here---------------------------------------------------------------
     display: flex;
     align-items: center;
 }
-.german, .english, .variable {
-    height: 25px;
-    width: 25px;
+.selectGerman, .selectEnglish, .selectVariable {
+    height: calc(100% / 3);
     border: solid lightgrey 1px;
+}
+.selected {
+    border: solid blue 1px;
+    background-color: lightblue;
 }
 
 .listPreviewContainer {
+    grid-template-columns: 6fr 2fr 20fr 2fr 2fr 52fr 6fr;
+    grid-template-rows: 2fr 92fr 4fr 2fr;
+    grid-template-areas:
+        ". . . . . . ."
+        ". sbT innerSb sbR . pane ."
+        ". sbL innerSb sbB . toolbar ."
+        ". . . . . . .";
     display: none;
+    height: 100vh;
+}
+.sidebar {
+    border: solid lightgrey 1px;
+    grid-area: sbT / sbT / sbB / sbB;
+    display: grid;
+    grid-template-columns: 5fr 90fr 5fr;
+    grid-template-rows: 15fr 20fr 45fr 20fr;
+    grid-template-areas:
+        "header header header"
+        ". modes ."
+        ". language ."
+        ". start .";
+}
+.sbHeader {
+    border: solid lightgrey 1px;
+    grid-area: header;
+}
+.sbModes {
+    border: solid lightgrey 1px;
+    grid-area: modes;
+}
+.sbLanguage {
+    border: solid lightgrey 1px;
+    grid-area: language;
+}
+.sbStart {
+    border: solid lightgrey 1px;
+    grid-area: start;
+}
+.questions {
+    border: solid lightgrey 1px;
+    grid-area: pane;
+}
+.toolbar {
+    border: solid lightgrey 1px;
+    grid-area: toolbar;
 }
 
 .quizContainer {
