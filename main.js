@@ -40,24 +40,34 @@ const listPreviewHandler = (function() {
         // allows the list of questions to be set by the pane handler when the active pane changes to the list preview pane
         assignList(questions) {
             listQuestions = questions
+            this.updatePercentage()
+        },
+        // sets the percentage learned icon to its appropriate value
+        updatePercentage() {
+            const listPreviewHeaderSubPane = document.querySelector('.sbHeader')
+            listPreviewHeaderSubPane.textContent = getCompletionPercentage(listQuestions)
         }
     }
 })()
 
 const panes = (function() {
+    // sets up the back button
+    let currentPane
+    const backButton = document.querySelector('.back')
+    backButton.addEventListener('click', () => panes.back())
+
     // stores the three main panes and important descendents
     const menuPane = document.querySelector('.menuContainer')
     const listPreviewPane = document.querySelector('.listPreviewContainer')
     const quizPane = document.querySelector('.quizContainer')
 
     const listsSubPane = menuPane.querySelector('.lists')
-    const listPreviewHeaderSubPane = document.querySelector('.sbHeader')
     // changes the view of the application betwen the menu, list preview, and quiz panes
     function swapMenuPanes(menu, list, quiz) {
         menuPane.style.display = (menu ? 'grid' : 'none')
         listPreviewPane.style.display = (list ? 'grid' : 'none')
         quizPane.style.display = (quiz ? 'grid' : 'none')
-    }  
+    }
 
     // creates a button for the menu pane corresponding to a question list; clicking navigates to the list preview for the respective list
     function createListButton(list) {
@@ -83,19 +93,40 @@ const panes = (function() {
     return {
         // return helper functions which call the swapMenuPanes function with the appropriate arguments
         menu() {
+            currentPane = 'menu'
+            backButton.style.display = 'none'
+
             populateMenu()
             swapMenuPanes(true, false, false)
         },
         listPreview(list) {
+            currentPane = 'list'
+            backButton.style.display = 'block'
+
             swapMenuPanes(false, true, false)
-            // pass relevant information to the listPreviewHandler
-            const questions = loadQuestionList(list)
-            listPreviewHandler.assignList(questions)
-            // set the percent learned icon on the header
-            listPreviewHeaderSubPane.textContent = getCompletionPercentage(questions)
+            // pass relevant information to the listPreviewHandler if there is information to pass
+            // if nothing is passed the listPreviewHandler will still contain the information from last time
+            // nothing is passed when the back button is pressed
+            if(list) {
+                const questions = loadQuestionList(list)
+                listPreviewHandler.assignList(questions)
+            }
+            listPreviewHandler.updatePercentage()
         },
         quiz() {
+            currentPane = 'quiz'
+            backButton.style.display = 'block'
+
             swapMenuPanes(false, false, true)
+        },
+        // navigates backwards one pane
+        back() {
+            if(currentPane == 'quiz') {
+                this.listPreview()
+            }
+            else if(currentPane == 'list') {
+                this.menu()
+            }
         }
     }
 })()
