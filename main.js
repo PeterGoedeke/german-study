@@ -25,6 +25,8 @@ const listHandler = (function() {
         element.classList.add('selected')
         testingGerman = mode
         testingVariable = variable
+        
+        listHandler.updateDisplay()
     }
 
     // setup the start quiz buton
@@ -38,21 +40,101 @@ const listHandler = (function() {
         it.next()
     }
 
+    // functions to set a question's german or english status to ready to answer
+    function refreshQuestionGerman(question) {
+        question.weightGerman = DEFAULTWEIGHT
+        question.lastAnsweredGerman = 0
+        question.streakGerman = 0
+    }
+    function refreshQuestionEnglish(question) {
+        question.weightEnglish = DEFAULTWEIGHT
+        question.lastAnsweredEnglish = 0
+        question.streakEnglish = 0
+    }
     // set all questions marked as answered which are ready for answering to the default weighting
     function refreshQuestionWeightings() {
         listQuestions.forEach(question => {
             if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now()) {
-                question.weightGerman = DEFAULTWEIGHT
-                question.lastAnsweredGerman = 0
-                question.streakGerman = 0
+                refreshQuestionGerman(question)
+                if(!question.locked) {
+                    question.reanswerTime = getNextTime(question.reanswerTime)
+                }
             }
             if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now()) {
-                question.weightEnglish = DEFAULTWEIGHT
-                question.lastAnsweredEnglish = 0
-                question.streakEnglish = 0
+                refreshQuestionEnglish(question)
+                if(!question.locked) {
+                    question.reanswerTime = getNextTime(question.reanswerTime)
+                }
             }
         })
     }
+
+    // when one of the arrows is clicked to increase or decrease the time between question answerings, change the display and the
+    // question appropriately
+    function arrowClicked(up, question, intervalDisplay) {
+        const argument = testingGerman ? question.reanswerTimeGerman : question.reanswerTimeEnglish
+        const val = (up ? getNextTime(argument) : getPreviousTime(argument)) 
+        if(testingGerman) {
+            question.reanswerTimeGerman = val
+            refreshQuestionGerman(question)
+        }
+        else {
+            question.reanswerTimeEnglish = val
+            refreshQuestionEnglish(question)
+        }
+        intervalDisplay.textContent = getTimeLabel(val)
+        saveQuestionList(listName, listQuestions)
+    }
+
+    // returns a question preview element which contains the tools to edit how often the question should be reasked, whether it should be locked, and which contains the german and the english text of the question
+    function getQuestionElement(question) {
+        const element = document.createElement('div')
+        element.className = 'questionPreview'
+
+        // append the text elements representing the german and english text of the question
+        const german = document.createElement('div')
+        german.className = 'questionText'
+        german.textContent = question.german.join(', ')
+        element.appendChild(german)
+
+        const english = document.createElement('div')
+        english.className = 'questionText'
+        english.textContent = question.english.join(', ')
+        element.appendChild(english)
+
+        // do not append the reanswer time controls when testing variable, as there are separate values for english and german
+        if(!testingVariable) {
+            const upArrow = document.createElement('div')
+            upArrow.className = 'arrow'
+            upArrow.addEventListener('click', e => {
+                arrowClicked(true, question, intervalDisplay)
+            })
+            const intervalDisplay = document.createElement('div')
+            intervalDisplay.className = 'intervalDisplay'
+            intervalDisplay.textContent = (testingGerman ? getTimeLabel(question.reanswerTimeGerman) : getTimeLabel(question.reanswerTimeEnglish))
+            const downArrow = document.createElement('div')
+            downArrow.className = 'arrow'
+            downArrow.addEventListener('click', e => {
+                arrowClicked(false, question, intervalDisplay)
+            })
+            element.appendChild(upArrow)
+            element.appendChild(intervalDisplay)
+            element.appendChild(downArrow)
+        }
+        // append the lock button which is able to be toggled on click, changing the locked status of the question
+        const lock = document.createElement('div')
+        lock.className = 'lock'
+        if(question.locked) lock.classList.add('isLocked')
+        lock.addEventListener('click', () => {
+            question.locked = !question.locked
+            lock.classList.toggle('isLocked')
+            saveQuestionList(listName, listQuestions)
+        })
+        element.appendChild(lock)
+
+        return element
+    }
+    const questionsSubPane = document.querySelector('.questions')
 
     return {
         // allows the list of questions to be set by the pane handler when the active pane changes to the list preview pane
@@ -61,11 +143,17 @@ const listHandler = (function() {
             listName = list
             // saveQuestionList('questions.json', questions)
         },
-        // sets the percentage learned icon to its appropriate value and show a preview of the questions =
+        // sets the percentage learned icon to its appropriate value and show a preview of the questions
         updateDisplay() {
             const listPreviewHeaderSubPane = document.querySelector('.sbHeader')
             listPreviewHeaderSubPane.textContent = getCompletionPercentage(listQuestions)
             refreshQuestionWeightings()
+
+            // add question previews
+            while(questionsSubPane.firstChild) questionsSubPane.removeChild(questionsSubPane.firstChild)
+            listQuestions.forEach(question => {
+                questionsSubPane.appendChild(getQuestionElement(question))
+            })
         },
         get path() {
             return listName

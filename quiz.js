@@ -1,6 +1,4 @@
 const times = Object.freeze({
-    second: 1000,
-    minute: 1000 * 60,
     hour: 1000 * 60 * 60,
     day: 1000 * 60 * 60 * 24,
     week: 1000 * 60 * 60 * 24 * 7,
@@ -8,6 +6,34 @@ const times = Object.freeze({
     month: 1000 * 60 * 60 * 24 * 7 * 2 * 2,
 })
 const DEFAULTWEIGHT = 10
+// functions which give first value smaller or larger than the argument value from the times object
+function getNextTime(time) {
+    for(const key in times) {
+        if(time < times[key]) return times[key]
+    }
+    return times.month
+}
+function getPreviousTime(time) {
+    const keys = []
+    for(const key in times) keys.push(key)
+    keys.reverse()
+    for(let i = 0; i < keys.length; i++) {
+        if(time > times[keys[i]]) return times[keys[i]]
+    }
+    return times.hour
+}
+// allow retrieval of the name of the time by providing the time millisecond value
+function getTimeLabel(time) {
+    for(const key in times) {
+        if(time == times[key]) return key
+    }
+}
+const s = Object.freeze({
+    WRONG: 0,
+    CORRECT: 1,
+    TYPO: 2,
+    WRONGARTICLE: 3
+})
 
 // helper function to display text to the output box
 function output(text) {
@@ -76,12 +102,6 @@ function sanitise(text) {
     return text.trim().replace(/ /g, '').toLowerCase()
 }
 
-const s = Object.freeze({
-    WRONG: 0,
-    CORRECT: 1,
-    TYPO: 2,
-    WRONGARTICLE: 3
-})
 const questionProto = {
     // convenient to have the question be aware of which language is the answer and which is the question
     get rawText() {
@@ -129,6 +149,9 @@ const questionProto = {
     set lastAnswered(x) {
         if(testingGerman) this.lastAnsweredGerman = x
         else this.lastAnsweredEnglish = x
+    },
+    get reanswerTime() {
+        return (testingGerman ? this.reanswerTimeGerman : this.reanswerTimeEnglish)
     },
     // by passing in the question text and the user's answer text and seeing if they both match, isCorrectAnswer works without
     // needing to know whether german or english is being tested
