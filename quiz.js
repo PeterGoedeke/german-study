@@ -208,7 +208,7 @@ const getIterator = (function() {
             else {
                 setInputPlaceholder('Incorrect. Press any key to continue')
                 output(`Correct answer:\n${currentQuestion.answerText}`)
-                currentQuestion.weighting += getWeightingTotal() * 0.75
+                currentQuestion.weighting += getWeightingTotal() * 0.4
                 currentQuestion.answeredWrong()
                 setStreakVisual(currentQuestion.correctAnswerStreak, true)
                 yield
