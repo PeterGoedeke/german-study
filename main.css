@@ -84,11 +84,12 @@ CSS starts here---------------------------------------------------------------
 }
 
 .listPreviewContainer {
-    grid-template-columns: 6fr 2fr 20fr 2fr 2fr 52fr 6fr;
-    grid-template-rows: 2fr 6fr 86fr 4fr 2fr;
+    grid-template-columns: 2fr 2fr 20fr 2fr 2fr 58fr 4fr;
+    grid-template-rows: 2fr 6fr 25px 86fr 4fr 2fr;
     grid-template-areas:
         ". . . . . . ."
         ". sbT innerSB sbR . header ."
+        ". sbT innerSB sbR . addNew ."
         ". sbT innerSb sbR . pane ."
         ". sbL innerSb sbB . toolbar ."
         ". . . . . . .";
@@ -127,14 +128,32 @@ CSS starts here---------------------------------------------------------------
     border: solid lightgrey 1px;
     grid-area: header;
 }
+.addNewQuestion {
+    grid-area: addNew;
+    display: flex;
+    align-items: center;
+}
+.setGerman, .setEnglish {
+    width: 35%;
+    border-right: solid black 1px;
+    height: 100%;
+}
+.setGerman > input, .setEnglish > input {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    font-size: 10px;
+}
 .questions {
     border: solid lightgrey 1px;
     grid-area: pane;
     overflow-y: overlay;
 }
+.questionPreview {
+    height: 25px;
+}
 .questionPreview, .questionsHeader {
     display: flex;
-    height: 25px;
     align-items: center;
     border-bottom: solid black 1px;
 }
@@ -153,7 +172,7 @@ CSS starts here---------------------------------------------------------------
 }
 .intervalDisplay {
     height: 100%;
-    width: 15%;
+    width: 7%;
     border: solid lightgrey 1px;
 }
 .lock {
@@ -163,6 +182,11 @@ CSS starts here---------------------------------------------------------------
 }
 .isLocked {
     background-color: red;
+}
+.delete {
+    height: 100%;
+    width: 5%;
+    border: solid pink 1px;
 }
 .toolbar {
     border: solid lightgrey 1px;
@@ -226,4 +250,12 @@ CSS starts here---------------------------------------------------------------
     width: 5%;
     height: 5%;
     border: solid lightgrey 1px;
+}
+
+.activeInput > input {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    font-size: 10px;
+    /* text-align: center; */
 }

@@ -1,3 +1,49 @@
+const keys = Object.freeze({
+    enter: 13,
+    tab: 9,
+    left: 37,
+    right: 39
+})
+
+// turns an element into an input and calls a callback when the element is unfocused or enter is pressed
+function inputify(element, cb, element2, cb2, setText = true) {
+    let input = document.createElement('input')
+    if(setText) input.value = element.textContent
+    element.textContent = ''
+    element.classList.add('activeInput')
+    element.appendChild(input)
+    
+    function callCb() {
+        element.classList.remove('activeInput')
+        input.removeEventListener('keypress', callCbEnter)
+        cb(input.value)
+    }
+    function callCbEnter() {
+        if(event.which == keys.enter) {
+            element.classList.remove('activeInput')
+            input.removeEventListener('blur', callCb)
+            cb(input.value)
+        }
+        else if(event.which == keys.tab || event.which == keys.left || event.which == keys.right) {
+            inputify(element2, cb2, element, cb, setText)
+        }
+    }
+
+    input.addEventListener('blur', callCb)
+    input.addEventListener('keydown', callCbEnter)
+    input.addEventListener('click', event => event.stopImmediatePropagation())
+
+    setTimeout(() => {
+        input.focus()
+        input.select()
+    }, 0)
+}
+// convert a string into an array of possible answers
+function getAnswersFromString(str) {
+    return str.split(';').map(e => e.trim())
+}
+
+
 // returns the percentage of a list of questions which have a weighting of 1 (e.g. which have been marked as learnt)
 function getCompletionPercentage(questions) {
     return questions.reduce((total, question) => total += (question.weighting == 1), 0) / questions.length * 100 + '%'
@@ -96,11 +142,32 @@ const listHandler = (function() {
         german.className = 'questionText'
         german.textContent = question.german.join(', ')
         element.appendChild(german)
-
+        
         const english = document.createElement('div')
         english.className = 'questionText'
         english.textContent = question.english.join(', ')
         element.appendChild(english)
+
+        // add event listeners onto the german and english text to allow for the changing of the text values
+        german.addEventListener('click', () => {
+            german.textContent = question.german.join('; ') // change the text content so that the input value is separated by semicolons
+            inputify(german, changeGerman, english, changeEnglish)
+        })
+        english.addEventListener('click', () => {
+            english.textContent = question.english.join('; ') // change the text content so that the input value is separated by semicolons
+            inputify(english, changeEnglish, german, changeGerman)
+        })
+        // helper functions to change the value of the english or german text when the user has finished their input
+        function changeGerman(value) {
+            question.german = getAnswersFromString(value)
+            german.textContent = question.german.join(', ')
+            saveQuestionList(listName, listQuestions)
+        }
+        function changeEnglish(value) {
+            question.english = getAnswersFromString(value)
+            english.textContent = question.english.join(', ')
+            saveQuestionList(listName, listQuestions)
+        }
 
         // do not append the reanswer time controls when testing variable, as there are separate values for english and german
         if(!testingVariable) {
@@ -131,9 +198,50 @@ const listHandler = (function() {
             saveQuestionList(listName, listQuestions)
         })
         element.appendChild(lock)
+        
+        // append the delete button which can be clicked to remove the respective question from the list entirely
+        const deleteButton = document.createElement('div')
+        deleteButton.className = 'delete'
+        deleteButton.addEventListener('click', () => {
+            listQuestions.splice(listQuestions.indexOf(question), 1)
+            saveQuestionList(listName, listQuestions)
+            listHandler.updateDisplay()
+        })
+        element.appendChild(deleteButton)
 
         return element
     }
+
+    // set up the header inputs to be able to add new questions
+    const germanInput = document.querySelector('.setGerman > input')
+    const englishInput = document.querySelector('.setEnglish > input')
+    germanInput.addEventListener('keydown', event => keypressHeaderInputs(event, englishInput))
+    englishInput.addEventListener('keydown', event => keypressHeaderInputs(event, germanInput))
+
+    function keypressHeaderInputs(event, other) {
+        
+        if(event.which == keys.enter) {
+            // if valid, create a new question, add it to the list, and refresh the display
+            if(germanInput.value && englishInput.value) {
+                const question = createQuestion(getAnswersFromString(germanInput.value), getAnswersFromString(englishInput.value))
+                listQuestions.unshift(question)
+                listHandler.updateDisplay()
+                saveQuestionList(listName, listQuestions)
+                germanInput.value = ''
+                englishInput.value = ''
+                
+                germanInput.focus()
+                germanInput.select()
+            }
+        }
+        // toggle focus between the two inputs when certain keys are pressed
+        else if(event.which == keys.tab || event.which == keys.left || event.which == keys.right) {
+            event.preventDefault()
+            other.focus()
+            other.select()
+        }
+    }
+
     const questionsSubPane = document.querySelector('.questions')
 
     return {
