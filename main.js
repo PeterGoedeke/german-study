@@ -209,6 +209,12 @@ const listHandler = (function() {
         })
         element.appendChild(deleteButton)
 
+        if(testingGerman && question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now()) element.style.backgroundColor = '#faf8ca'
+        else if(!testingGerman && question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now()) element.style.backgroundColor = '#faf8ca'
+        else element.style.backgroundColor = '#cffcdb'
+
+        if(testingVariable) element.style.backgroundColor = 'white'
+
         return element
     }
 
