@@ -28,12 +28,6 @@ function getTimeLabel(time) {
         if(time == times[key]) return key
     }
 }
-const s = Object.freeze({
-    WRONG: 0,
-    CORRECT: 1,
-    TYPO: 2,
-    WRONGARTICLE: 3
-})
 
 // helper function to display text to the output box
 function output(text) {
@@ -88,7 +82,6 @@ input.addEventListener('keypress', e => {
     if(event.which == 13) {
         event.preventDefault()
         const value = input.value
-        input.value = ''
         it.next(value)
     }
 })
@@ -156,15 +149,52 @@ const questionProto = {
     // by passing in the question text and the user's answer text and seeing if they both match, isCorrectAnswer works without
     // needing to know whether german or english is being tested
     isCorrectAnswer(userInput, question) {
-        // if english contains user input and german is question or vice versa
-        if(question === this.german) {
+        // return correct if the answer is correct
+        const correct = sanitise(this.english).includes(sanitise(userInput)) && question === this.german
+        || sanitise(this.german).includes(sanitise(userInput)) && question === this.english
+        if(correct) return ans.CORRECT
 
+        // otherwise, test to see whether the problem is that the user used the wrong definite article
+        function testForWrongArticle(arr) {
+            const articles = ['der', 'die', 'das']
+            const answersWithoutArticle = sanitise(arr).map(elem => elem.slice(3))
+            for(let i = 0; i < arr.length; i++) {
+                // check if the strings match with the articles removed
+                const isPossibleMatch = sanitise(userInput.slice(3)) == answersWithoutArticle[i]
+                // true if the rest of the strings match and the first three characters of the user input and matching answer are articles
+                if(isPossibleMatch && articles.includes(arr[i].slice(0, 3)) && articles.includes(sanitise(userInput.slice(0, 3)))) {
+                    return true
+                }
+            }
         }
+        // doesn't make sense to test this if looking for answers in english
+        if(question === this.english && testForWrongArticle(this.german)) return ans.WRONGARTICLE
 
-        return sanitise(this.english).includes(sanitise(userInput)) && question === this.german
-            || sanitise(this.german).includes(sanitise(userInput)) && question === this.english
+        // if the answer is not correct, check if it is because of a typo and return typo if it was
+        let wasTypo = false
+        function testForTypos(arr) {
+            const distances = sanitise(arr).map(elem => levenshteinDistance(elem, sanitise(userInput)))
+            for(let i = 0; i < arr.length; i++) {
+                // 20% difference between the user input and a potential answer is considered to be a possible typo
+                if(distances[i] / sanitise(arr)[i].length <= .2) wasTypo = true
+            }
+        }
+        if(this.german === question) testForTypos(this.english)
+        else if(this.english === question) testForTypos(this.german)
+        if(wasTypo) return ans.TYPO
+
+        // if the answer was not correct, not wrong because of a mistake of article, and not a typo, then the answer is wrong
+        return ans.WRONG
     }
 }
+
+
+const ans = Object.freeze({
+    WRONG: 0,
+    CORRECT: 1,
+    TYPO: 2,
+    WRONGARTICLE: 3
+})
 
 // factory for creating question object
 function createQuestion(german, english, difficulty = 3, weightGerman = DEFAULTWEIGHT, weightEnglish = DEFAULTWEIGHT, streakGerman = 0,
@@ -224,7 +254,9 @@ const getIterator = (function() {
         questions = questionsParam
         testingGerman = testingGermanParam
         testingVariable = testingVariableParam
+
         // iterate through until a break is called
+        presentQuestionLoop:
         while(true) {
             // display the new question
             setInputPlaceholder('Enter text here')
@@ -232,30 +264,66 @@ const getIterator = (function() {
             if(testingVariable) testingGerman = Math.random() < 0.5
             setTimeout(() => setStreakVisual(currentQuestion.correctAnswerStreak), 200)
             output(currentQuestion.text)
+            let firstTry = true
             
-            const userInput = yield
-            // if user input is correct, mark it as so and move to next question
-            if(currentQuestion.isCorrectAnswer(userInput, currentQuestion.rawText)) {
-                currentQuestion.answeredRight()
-                saveQuestionList(listHandler.path, questions)
-                setStreakVisual(currentQuestion.correctAnswerStreak, true)
-                // check if all questions have been answered
-                if(areAllAnswered()) {
-                    output('All questions answered')
-                    break;
+            // the checkAnswerLoop exists so that the user may attempt to answer each question twice if their first attempt is
+            // deemed to be either a typo or a mistaken article
+            // continuing the check answer loop allows for a reanswer; breaking asks the next question
+            checkAnswerLoop:
+            while(true) {
+                const userInput = yield
+                // if user input is correct, mark it as so and move to next question
+                const answerStatus = currentQuestion.isCorrectAnswer(userInput, currentQuestion.rawText)
+                if(answerStatus == ans.CORRECT) {
+                    currentQuestion.answeredRight()
+                    saveQuestionList(listHandler.path, questions)
+                    setStreakVisual(currentQuestion.correctAnswerStreak, true)
+                    // check if all questions have been answered
+                    if(areAllAnswered()) {
+                        output('All questions answered')
+                        input.value = ''
+                        break presentQuestionLoop
+                    }
+                    input.value = ''
+                    break checkAnswerLoop
                 }
-            }
-            // if the user input is false, mark is as so and pause
-            else {
-                setInputPlaceholder('Incorrect. Press any key to continue')
-                output(`Correct answer:\n${currentQuestion.answerText}`)
-                currentQuestion.weighting += getWeightingTotal() * 0.4
-                currentQuestion.answeredWrong()
-                saveQuestionList(listHandler.path, questions)
-                setStreakVisual(currentQuestion.correctAnswerStreak, true)
-                yield
+                else if(answerStatus == ans.WRONGARTICLE && firstTry) {
+                    floatText('Wrong article')
+                    firstTry = false
+                    continue checkAnswerLoop
+                }
+                else if(answerStatus == ans.TYPO && firstTry) {
+                    floatText('Typo')
+                    firstTry = false
+                    continue checkAnswerLoop
+                }
+                // if the user input is false, mark is as so and pause
+                else {
+                    setInputPlaceholder('Incorrect. Press any key to continue')
+                    output(`Correct answer:\n${currentQuestion.answerText}`)
+                    currentQuestion.weighting += getWeightingTotal() * 0.4
+                    currentQuestion.answeredWrong()
+                    saveQuestionList(listHandler.path, questions)
+                    setStreakVisual(currentQuestion.correctAnswerStreak, true)
+                    yield
+                    input.value = ''
+                    break checkAnswerLoop
+                }
             }
         }
     }
     return eventLoop
 })()
+
+// displays a temporary, fading-out message on the screen
+function floatText(text) {
+    const floater = document.createElement('div')
+    floater.className = 'textFloater'
+    floater.textContent = text
+    
+    document.body.appendChild(floater)
+    setTimeout(() => {floater.style.transform = 'translateY(-30px)'}, 0)
+    setTimeout(() => {
+        document.body.removeChild(floater)
+    }, 1000)
+}
