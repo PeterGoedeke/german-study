@@ -263,6 +263,7 @@ const listHandler = (function() {
     const duplicateListButton = document.querySelector('.duplicateList')
     const renameButton = document.querySelector('.renameList')
     const lockButton = document.querySelector('.lockList')
+    const findDuplicatesButton = document.querySelector('.findDuplicates')
     deleteListButton.addEventListener('dblclick', () => {
         deleteList(listName)
         panes.back()
@@ -278,7 +279,6 @@ const listHandler = (function() {
             listName = value + '.json'
         }, false, false, false)
     })
-    // lockClicked 
     let lockClicked = false
     lockButton.addEventListener('click', () => {
         lockClicked = !lockClicked
@@ -286,6 +286,32 @@ const listHandler = (function() {
         listHandler.updateDisplay()
         saveQuestionList(listName, listQuestions)
     })
+    findDuplicatesButton.addEventListener('click', () => {
+        let indices = []
+        // gather the indices at which questions with duplicate text exist
+        for(let i = 0; i < listQuestions.length - 1; i++) {
+            for(let j = i + 1; j < listQuestions.length; j++) {
+                const englishIsSame = listQuestions[i].english.join(', ') == listQuestions[j].english.join(', ')
+                const germanIsSame = listQuestions[i].german.join(', ') == listQuestions[j].german.join(', ')
+                
+                if(englishIsSame || germanIsSame) {
+                    indices.unshift(i, j)
+                }
+            }
+        }
+        // move all of these questions to the front of the list
+        indices = removeDuplicates(indices)
+        indices.forEach(index => {
+            const question = listQuestions.splice(index, 1)[0]
+            listQuestions.unshift(question)
+        })
+        listHandler.updateDisplay()
+        // add a separator after the recently shifted elements to make the distinction clear
+        const separator = document.createElement('div')
+        separator.className = 'questionPreview'
+        questionsSubPane.insertBefore(separator, document.querySelectorAll('.questionPreview')[indices.length])
+    })
+
 
     const questionsSubPane = document.querySelector('.questions')
 
@@ -406,3 +432,9 @@ const panes = (function() {
 })()
 // the default pane upon opening the application is the menu pane
 panes.menu()
+
+// helper function to remove duplicate elements from an array
+function removeDuplicates(a) {
+    const seen = {}
+    return a.filter(item => seen.hasOwnProperty(item) ? false : (seen[item] = true))
+}
