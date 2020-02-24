@@ -256,12 +256,6 @@ const listHandler = (function() {
                 germanInput.select()
             }
         }
-        // toggle focus between the two inputs when certain keys are pressed
-        else if(event.which == keys.tab || event.which == keys.left || event.which == keys.right) {
-            event.preventDefault()
-            other.focus()
-            other.select()
-        }
     }
 
     // setting up the file management buttons so that the user is able to duplicate, delete, lock, and rename their list
