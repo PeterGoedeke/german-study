@@ -195,7 +195,7 @@ CSS starts here---------------------------------------------------------------
     display: flex;
     align-items: center;
 }
-.deleteList, .duplicateList, .newList, .renameList {
+.deleteList, .duplicateList, .newList, .renameList, .lockList {
     border-radius: 5px;
     border: solid lightgreen 1px;
     height: 80%;

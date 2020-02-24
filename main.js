@@ -247,10 +247,11 @@ const listHandler = (function() {
         }
     }
 
-    // setting up the file management buttons so that the user is able to duplicate, delete, and rename their list
+    // setting up the file management buttons so that the user is able to duplicate, delete, lock, and rename their list
     const deleteListButton = document.querySelector('.deleteList')
     const duplicateListButton = document.querySelector('.duplicateList')
     const renameButton = document.querySelector('.renameList')
+    const lockButton = document.querySelector('.lockList')
     deleteListButton.addEventListener('dblclick', () => {
         deleteList(listName)
         panes.back()
@@ -265,6 +266,14 @@ const listHandler = (function() {
             renameButton.textContent = 'Rename'
             listName = value + '.json'
         }, false, false, false)
+    })
+    // lockClicked 
+    let lockClicked = false
+    lockButton.addEventListener('click', () => {
+        lockClicked = !lockClicked
+        listQuestions.forEach(question => question.locked = lockClicked)
+        listHandler.updateDisplay()
+        saveQuestionList(listName, listQuestions)
     })
 
     const questionsSubPane = document.querySelector('.questions')
