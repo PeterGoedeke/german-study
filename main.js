@@ -101,18 +101,19 @@ const listHandler = (function() {
     function refreshQuestionWeightings() {
         listQuestions.forEach(question => {
             if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now()) {
-                refreshQuestionGerman(question)
-                if(!question.locked) {
-                    question.reanswerTime = getNextTime(question.reanswerTime)
+                if(!question.locked && question.weightGerman == 1) {
+                    question.reanswerTimeGerman = getNextTime(question.reanswerTimeGerman)
                 }
+                refreshQuestionGerman(question)
             }
             if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now()) {
-                refreshQuestionEnglish(question)
-                if(!question.locked) {
-                    question.reanswerTime = getNextTime(question.reanswerTime)
+                if(!question.locked && question.weightEnglish == 1) {
+                    question.reanswerTimeEnglish = getNextTime(question.reanswerTimeEnglish)
                 }
+                refreshQuestionEnglish(question)
             }
         })
+        saveQuestionList(listName, listQuestions)
     }
 
     // when one of the arrows is clicked to increase or decrease the time between question answerings, change the display and the
