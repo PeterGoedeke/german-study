@@ -257,6 +257,7 @@ const listHandler = (function() {
         inputify(renameButton, value => {
             const succeeded = renameList(listName, value + '.json')
             renameButton.textContent = 'Rename'
+            listName = value + '.json'
         }, false, false, false)
     })
 
@@ -301,7 +302,7 @@ const panes = (function() {
     // setup the new list button
     const newListButton = document.querySelector('.newList')
     newListButton.addEventListener('click', () => {
-        saveQuestionList('new.json', []) // this only works if the new.json file does not exist
+        saveQuestionList('new.json', [], true) // this only works if the new.json file does not exist
         populateMenu()
     })
 

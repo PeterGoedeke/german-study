@@ -18,8 +18,8 @@ function loadQuestionList(filePath) {
     return questions
 }
 // save a question array to JSON file
-function saveQuestionList(filePath, questions) {
-    if(!fs.existsSync(`./lists/${filePath}`)) {
+function saveQuestionList(filePath, questions, careful = false) {
+    if(!(careful && fs.fileExistsSync(`./listsl${filePath}`))) {
         fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'ascii')
     }
 }
