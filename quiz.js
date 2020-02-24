@@ -99,7 +99,7 @@ function sanitise(text) {
         const newArray = text.map(element => sanitise(element))
         return newArray
     }
-    return text.trim().replace(/ /g, '').toLowerCase()
+    return text.trim().replace(/ /g, '').replace(/ *\([^)]*\) */g, "").toLowerCase()
 }
 
 const questionProto = {
