@@ -45,8 +45,20 @@ function getAnswersFromString(str) {
 
 
 // returns the percentage of a list of questions which have a weighting of 1 (e.g. which have been marked as learnt)
+// for german, english, and overall
 function getCompletionPercentage(questions) {
-    return questions.reduce((total, question) => total += (question.weighting == 1), 0) / questions.length * 100 + '%'
+    const totals = questions.reduce((total, question) => {
+        total.german += (question.weightGerman == 1)
+        total.english += (question.weightEnglish == 1)
+        total.both += (question.weightGerman == 1)
+        total.both += (question.weightEnglish == 1)
+        return total
+    }, { german: 0, english: 0, both: 0 }) 
+    
+    totals.german = 'German: ' + Math.round(totals.german / questions.length * 100) + '%'
+    totals.english = 'English: ' + Math.round(totals.english / questions.length * 100) + '%'
+    totals.both = 'Overall: ' + Math.round(totals.both / (questions.length * 2) * 100) + '%'
+    return totals
 }
 
 const listHandler = (function() {
@@ -210,11 +222,15 @@ const listHandler = (function() {
         })
         element.appendChild(deleteButton)
 
-        if(testingGerman && question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now()) element.style.backgroundColor = '#faf8ca'
-        else if(!testingGerman && question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now()) element.style.backgroundColor = '#faf8ca'
-        else element.style.backgroundColor = '#cffcdb'
+        if(testingGerman && question.weightGerman != 1) element.style.backgroundColor = '#faf8ca' // pale yellow
+        else if(!testingGerman && question.weightEnglish != 1) element.style.backgroundColor = '#faf8ca' // pale yellow
+        else element.style.backgroundColor = '#cffcdb' // pale green
 
-        if(testingVariable) element.style.backgroundColor = 'white'
+        if(testingVariable) {
+            element.style.backgroundColor = 'white'
+            german.style.backgroundColor = (question.weightGerman != 1 ? '#faf8ca' : '#cffcdb')
+            english.style.backgroundColor = (question.weightEnglish != 1 ? '#faf8ca' : '#cffcdb')
+        }
 
         return element
     }
@@ -289,7 +305,10 @@ const listHandler = (function() {
         // sets the percentage learned icon to its appropriate value and show a preview of the questions
         updateDisplay() {
             const listPreviewHeaderSubPane = document.querySelector('.sbHeader')
-            listPreviewHeaderSubPane.textContent = getCompletionPercentage(listQuestions)
+            const totals = getCompletionPercentage(listQuestions)
+            germanButton.textContent = totals.german
+            englishButton.textContent = totals.english
+            variableButton.textContent = totals.both
             refreshQuestionWeightings()
 
             // add question previews
