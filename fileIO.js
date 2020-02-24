@@ -19,7 +19,9 @@ function loadQuestionList(filePath) {
 }
 // save a question array to JSON file
 function saveQuestionList(filePath, questions) {
-    fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'ascii')
+    if(!fs.existsSync(`./lists/${filePath}`)) {
+        fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'ascii')
+    }
 }
 // read an excel table into an array of questions
 function importFromExcel(filePath) {
@@ -31,4 +33,22 @@ function importFromExcel(filePath) {
 // returns all JSON files in the main lists directory
 function getListNames() {
     return fs.readdirSync('./lists/').filter(list => list.endsWith('.json'))
+}
+// delete a list
+function deleteList(filePath) {
+    fs.unlinkSync(`./lists/${filePath}`)
+}
+// duplicate a list
+function duplicateList(sourcePath, destPath) {
+    if(!fs.existsSync(`./lists/${destPath}`)) {
+        fs.copyFileSync(`./lists/${sourcePath}`, `./lists/${destPath}`)
+    }
+}
+// rename a list 
+function renameList(sourcePath, destPath) {
+    const fileExists = fs.existsSync(`./lists/${destPath}`)
+    if(!fileExists) {
+        fs.renameSync(`./lists/${sourcePath}`, `./lists/${destPath}`)
+    }
+    return fileExists
 }

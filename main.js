@@ -24,7 +24,7 @@ function inputify(element, cb, element2, cb2, setText = true) {
             input.removeEventListener('blur', callCb)
             cb(input.value)
         }
-        else if(event.which == keys.tab || event.which == keys.left || event.which == keys.right) {
+        else if(element2 && (event.which == keys.tab || event.which == keys.left || event.which == keys.right)) {
             inputify(element2, cb2, element, cb, setText)
         }
     }
@@ -217,9 +217,8 @@ const listHandler = (function() {
     const englishInput = document.querySelector('.setEnglish > input')
     germanInput.addEventListener('keydown', event => keypressHeaderInputs(event, englishInput))
     englishInput.addEventListener('keydown', event => keypressHeaderInputs(event, germanInput))
-
+    // function to run the header inputs
     function keypressHeaderInputs(event, other) {
-        
         if(event.which == keys.enter) {
             // if valid, create a new question, add it to the list, and refresh the display
             if(germanInput.value && englishInput.value) {
@@ -241,6 +240,25 @@ const listHandler = (function() {
             other.select()
         }
     }
+
+    // setting up the file management buttons so that the user is able to duplicate, delete, and rename their list
+    const deleteListButton = document.querySelector('.deleteList')
+    const duplicateListButton = document.querySelector('.duplicateList')
+    const renameButton = document.querySelector('.renameList')
+    deleteListButton.addEventListener('dblclick', () => {
+        deleteList(listName)
+        panes.back()
+    })
+    duplicateListButton.addEventListener('click', () => {
+        duplicateList(listName, listName.slice(0, -5) + ' - copy.json')
+        panes.back() 
+    })
+    renameButton.addEventListener('click', () => {
+        inputify(renameButton, value => {
+            const succeeded = renameList(listName, value + '.json')
+            renameButton.textContent = 'Rename'
+        }, false, false, false)
+    })
 
     const questionsSubPane = document.querySelector('.questions')
 
@@ -279,6 +297,13 @@ const panes = (function() {
     const menuPane = document.querySelector('.menuContainer')
     const listPreviewPane = document.querySelector('.listPreviewContainer')
     const quizPane = document.querySelector('.quizContainer')
+
+    // setup the new list button
+    const newListButton = document.querySelector('.newList')
+    newListButton.addEventListener('click', () => {
+        saveQuestionList('new.json', []) // this only works if the new.json file does not exist
+        populateMenu()
+    })
 
     const listsSubPane = menuPane.querySelector('.lists')
     // changes the view of the application betwen the menu, list preview, and quiz panes
