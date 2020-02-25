@@ -194,6 +194,7 @@ const getIterator = (function() {
                 const answerStatus = currentQuestion.isCorrectAnswer(userInput, currentQuestion.rawText)
                 if(answerStatus == ans.CORRECT) {
                     currentQuestion.answeredRight()
+                    if(currentQuestion.weighting == 10) currentQuestion.weighting += getWeightingTotal() * 0.25
                     saveQuestionList(listHandler.path, questions)
                     setStreakVisual(currentQuestion.correctAnswerStreak, true)
                     // check if all questions have been answered
@@ -219,7 +220,7 @@ const getIterator = (function() {
                 else {
                     setInputPlaceholder('Incorrect. Press any key to continue')
                     output(`Correct answer:\n${currentQuestion.answerText}`)
-                    currentQuestion.weighting += getWeightingTotal() * 0.4
+                    if(currentQuestion.weighting == 10) currentQuestion.weighting += getWeightingTotal() * 0.25
                     currentQuestion.answeredWrong()
                     saveQuestionList(listHandler.path, questions)
                     setStreakVisual(currentQuestion.correctAnswerStreak, true)
