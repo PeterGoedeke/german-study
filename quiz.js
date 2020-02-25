@@ -36,6 +36,8 @@ const questionProto = {
     answeredWrong() {
         this.correctAnswerStreak = -1
         this.lastAnswered = 0
+        if(testingGerman) this.wrongGerman ++
+        else this.wrongEnglish ++
     },
     // return the appropriate values based on which is being tested
     get weighting() {
@@ -104,7 +106,6 @@ const questionProto = {
     }
 }
 
-
 const ans = Object.freeze({
     WRONG: 0,
     CORRECT: 1,
@@ -114,10 +115,10 @@ const ans = Object.freeze({
 
 // factory for creating question object
 function createQuestion(german, english, difficulty = 3, weightGerman = DEFAULTWEIGHT, weightEnglish = DEFAULTWEIGHT, streakGerman = 0,
-    streakEnglish = 0, reanswerTimeGerman = times.hour, reanswerTimeEnglish = times.hour, lastAnsweredGerman = 0, lastAnsweredEnglish = 0, locked = false
+    streakEnglish = 0, reanswerTimeGerman = times.hour, reanswerTimeEnglish = times.hour, lastAnsweredGerman = 0, lastAnsweredEnglish = 0, locked = false, wrongGerman = 0, wrongEnglish = 0
 ) {
     const question = Object.assign(Object.create(questionProto), {
-        german, english, difficulty, weightGerman, weightEnglish, streakGerman, streakEnglish, reanswerTimeGerman, reanswerTimeEnglish, lastAnsweredGerman, lastAnsweredEnglish, locked
+        german, english, difficulty, weightGerman, weightEnglish, streakGerman, streakEnglish, reanswerTimeGerman, reanswerTimeEnglish, lastAnsweredGerman, lastAnsweredEnglish, locked, wrongGerman, wrongEnglish
     })
     return question
 }
@@ -222,8 +223,8 @@ const getIterator = (function() {
                     currentQuestion.answeredWrong()
                     saveQuestionList(listHandler.path, questions)
                     setStreakVisual(currentQuestion.correctAnswerStreak, true)
-                    yield
                     input.value = ''
+                    yield
                     break checkAnswerLoop
                 }
             }

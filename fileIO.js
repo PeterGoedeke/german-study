@@ -13,7 +13,7 @@ function loadQuestionList(filePath) {
     const data = JSON.parse(fs.readFileSync(`./lists/${filePath}`, 'ascii'))
     const questions = []
     data.forEach(q => questions.push(createQuestion(
-        q.german, q.english, q.difficulty, q.weightGerman, q.weightEnglish, q.streakGerman, q.streakEnglish, q.reanswerTimeGerman, q.reanswerTimeEnglish, q.lastAnsweredGerman, q.lastAnsweredEnglish, q.locked
+        q.german, q.english, q.difficulty, q.weightGerman, q.weightEnglish, q.streakGerman, q.streakEnglish, q.reanswerTimeGerman, q.reanswerTimeEnglish, q.lastAnsweredGerman, q.lastAnsweredEnglish, q.locked, q.wrongGerman, q.wrongEnglish
     )))
     return questions
 }

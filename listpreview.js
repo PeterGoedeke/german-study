@@ -67,22 +67,24 @@ const listHandler = (function() {
         question.weightGerman = DEFAULTWEIGHT
         question.lastAnsweredGerman = 0
         question.streakGerman = 0
+        question.wrongGerman = 0
     }
     function refreshQuestionEnglish(question) {
         question.weightEnglish = DEFAULTWEIGHT
         question.lastAnsweredEnglish = 0
         question.streakEnglish = 0
+        question.wrongEnglish = 0
     }
     // set all questions marked as answered which are ready for answering to the default weighting
     function refreshQuestionWeightings() {
         listQuestions.forEach(question => {
-            if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now()) {
+            if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now() && question.weightGerman == 1) {
                 if(!question.locked && question.weightGerman == 1) {
                     question.reanswerTimeGerman = getNextTime(question.reanswerTimeGerman)
                 }
                 refreshQuestionGerman(question)
             }
-            if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now()) {
+            if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now() && question.weightEnglish == 1) {
                 if(!question.locked && question.weightEnglish == 1) {
                     question.reanswerTimeEnglish = getNextTime(question.reanswerTimeEnglish)
                 }
@@ -117,6 +119,12 @@ const listHandler = (function() {
         element.addEventListener('contextmenu', e => {
             focusElement(element, question)
         })
+
+        const wrongCounter = document.createElement('div')
+        wrongCounter.className = 'wrongCounter'
+        console.log(question.wrongGerman)
+        wrongCounter.textContent = (testingGerman ? question.wrongGerman : question.wrongEnglish) || ''
+        element.appendChild(wrongCounter)
 
         // append the text elements representing the german and english text of the question
         const german = document.createElement('div')
@@ -299,9 +307,15 @@ const listHandler = (function() {
             variableButton.textContent = totals.both
             refreshQuestionWeightings()
 
-            // add question previews
+            // add question previews with those which have been answered wrong the most being placed first
             while(questionsSubPane.firstChild) questionsSubPane.removeChild(questionsSubPane.firstChild)
-            listQuestions.forEach(question => {
+
+            let sortedListQuestions
+            if(testingVariable) sortedListQuestions = listQuestions
+            else if(testingGerman) sortedListQuestions = listQuestions.sort((a, b) => b.wrongGerman - a.wrongGerman)
+            else sortedListQuestions = listQuestions.sort((a, b) => b.wrongEnglish - a.wrongEnglish)
+
+            sortedListQuestions.forEach(question => {
                 questionsSubPane.appendChild(getQuestionElement(question))
             })
         },

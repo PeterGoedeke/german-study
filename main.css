@@ -158,8 +158,12 @@ CSS starts here---------------------------------------------------------------
     align-items: center;
     border-bottom: solid black 1px;
 }
+.wrongCounter {
+    width: 5%;
+    height: 100%
+}
 .questionText {
-    width: 35%;
+    width: 32.5%;
     height: 100%;
     border-right: solid black 1px;
     text-overflow: ellipsis;
