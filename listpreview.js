@@ -120,10 +120,11 @@ const listHandler = (function() {
             focusElement(element, question)
         })
 
+        // display how many times the user has answered the question wrong since the last refresh
         const wrongCounter = document.createElement('div')
         wrongCounter.className = 'wrongCounter'
-        console.log(question.wrongGerman)
         wrongCounter.textContent = (testingGerman ? question.wrongGerman : question.wrongEnglish) || ''
+        if(testingVariable) wrongCounter.textContent = ''
         element.appendChild(wrongCounter)
 
         // append the text elements representing the german and english text of the question
