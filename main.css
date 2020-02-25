@@ -135,9 +135,12 @@ CSS starts here---------------------------------------------------------------
     align-items: center;
 }
 .setGerman, .setEnglish {
-    width: 35%;
+    width: 32.5%;
     border-right: solid black 1px;
     height: 100%;
+}
+.setGerman, .questionsHeader > :first-child {
+    width: 37.5% !important;
 }
 .setGerman > input, .setEnglish > input {
     width: 100%;
