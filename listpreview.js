@@ -1,48 +1,12 @@
 const keys = Object.freeze({
     enter: 13,
     tab: 9,
-    left: 37,
-    right: 39
+    right: 37,
+    up: 38,
+    left: 39,
+    down: 40,
+    L: 76
 })
-
-// turns an element into an input and calls a callback when the element is unfocused or enter is pressed
-function inputify(element, cb, element2, cb2, setText = true) {
-    let input = document.createElement('input')
-    if(setText) input.value = element.textContent
-    element.textContent = ''
-    element.classList.add('activeInput')
-    element.appendChild(input)
-    
-    function callCb() {
-        element.classList.remove('activeInput')
-        input.removeEventListener('keypress', callCbEnter)
-        cb(input.value)
-    }
-    function callCbEnter() {
-        if(event.which == keys.enter) {
-            element.classList.remove('activeInput')
-            input.removeEventListener('blur', callCb)
-            cb(input.value)
-        }
-        else if(element2 && (event.which == keys.tab || event.which == keys.left || event.which == keys.right)) {
-            inputify(element2, cb2, element, cb, setText)
-        }
-    }
-
-    input.addEventListener('blur', callCb)
-    input.addEventListener('keydown', callCbEnter)
-    input.addEventListener('click', event => event.stopImmediatePropagation())
-
-    setTimeout(() => {
-        input.focus()
-        input.select()
-    }, 0)
-}
-// convert a string into an array of possible answers
-function getAnswersFromString(str) {
-    return str.split(';').map(e => e.trim())
-}
-
 
 // returns the percentage of a list of questions which have a weighting of 1 (e.g. which have been marked as learnt)
 // for german, english, and overall
@@ -149,6 +113,10 @@ const listHandler = (function() {
     function getQuestionElement(question) {
         const element = document.createElement('div')
         element.className = 'questionPreview'
+        // allow the question to be focused so that it can be easily copied to another list
+        element.addEventListener('contextmenu', e => {
+            focusElement(element, question)
+        })
 
         // append the text elements representing the german and english text of the question
         const german = document.createElement('div')
@@ -342,99 +310,3 @@ const listHandler = (function() {
         }
     }
 })()
-
-const panes = (function() {
-    // sets up the back button
-    let currentPane
-    const backButton = document.querySelector('.back')
-    backButton.addEventListener('click', () => panes.back())
-
-    // stores the three main panes and important descendents
-    const menuPane = document.querySelector('.menuContainer')
-    const listPreviewPane = document.querySelector('.listPreviewContainer')
-    const quizPane = document.querySelector('.quizContainer')
-
-    // setup the new list button
-    const newListButton = document.querySelector('.newList')
-    newListButton.addEventListener('click', () => {
-        saveQuestionList('new.json', [], true) // this only works if the new.json file does not exist
-        populateMenu()
-    })
-
-    const listsSubPane = menuPane.querySelector('.lists')
-    // changes the view of the application betwen the menu, list preview, and quiz panes
-    function swapMenuPanes(menu, list, quiz) {
-        menuPane.style.display = (menu ? 'grid' : 'none')
-        listPreviewPane.style.display = (list ? 'grid' : 'none')
-        quizPane.style.display = (quiz ? 'grid' : 'none')
-    }
-
-    // creates a button for the menu pane corresponding to a question list; clicking navigates to the list preview for the respective list
-    function createListButton(list) {
-        const element = document.createElement('div')
-        element.className = 'list'
-        element.textContent = list.slice(0, -5) // remove .json ending from text
-        element.addEventListener('click', e => {
-            panes.listPreview(list)
-        })
-        return element
-    }
-    // populates the lists sub pane of the menu with a button for each question list
-    function populateMenu() {
-        // ensure that lists don't duplicate each time the user navigates to the menu pane
-        while(listsSubPane.firstChild) listsSubPane.removeChild(listsSubPane.firstChild)
-
-        const lists = getListNames()
-        lists.forEach(list => {
-            const element = createListButton(list)
-            listsSubPane.appendChild(element)
-        })
-    }
-    return {
-        // return helper functions which call the swapMenuPanes function with the appropriate arguments
-        menu() {
-            currentPane = 'menu'
-            backButton.style.display = 'none'
-
-            populateMenu()
-            swapMenuPanes(true, false, false)
-        },
-        listPreview(list) {
-            currentPane = 'list'
-            backButton.style.display = 'block'
-
-            swapMenuPanes(false, true, false)
-            // pass relevant information to the listHandler if there is information to pass
-            // if nothing is passed the listHandler will still contain the information from last time
-            // nothing is passed when the back button is pressed
-            if(list) {
-                const questions = loadQuestionList(list)
-                listHandler.assignList(questions, list)
-            }
-            listHandler.updateDisplay()
-        },
-        quiz() {
-            currentPane = 'quiz'
-            backButton.style.display = 'block'
-
-            swapMenuPanes(false, false, true)
-        },
-        // navigates backwards one pane
-        back() {
-            if(currentPane == 'quiz') {
-                this.listPreview()
-            }
-            else if(currentPane == 'list') {
-                this.menu()
-            }
-        }
-    }
-})()
-// the default pane upon opening the application is the menu pane
-panes.menu()
-
-// helper function to remove duplicate elements from an array
-function removeDuplicates(a) {
-    const seen = {}
-    return a.filter(item => seen.hasOwnProperty(item) ? false : (seen[item] = true))
-}

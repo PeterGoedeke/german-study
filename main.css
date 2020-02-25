@@ -283,3 +283,6 @@ CSS starts here---------------------------------------------------------------
     font-size: 10px;
     /* text-align: center; */
 }
+.focused {
+    background-color: lightblue !important;
+}

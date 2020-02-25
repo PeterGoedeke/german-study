@@ -19,7 +19,7 @@ function loadQuestionList(filePath) {
 }
 // save a question array to JSON file
 function saveQuestionList(filePath, questions, careful = false) {
-    if(!(careful && fs.fileExistsSync(`./listsl${filePath}`))) {
+    if(!(careful && fs.fileExistsSync(`./lists/${filePath}`))) {
         fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'ascii')
     }
 }
