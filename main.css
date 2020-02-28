@@ -172,6 +172,7 @@ CSS starts here---------------------------------------------------------------
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    font-family: Arial;
 }
 .arrow {
     height: 100%;
@@ -231,10 +232,16 @@ CSS starts here---------------------------------------------------------------
     font-size: 2em;
     grid-area: display;
     white-space: pre-line;
+    font-family: Arial;
 }
 .input {
     text-align: center;
     grid-area: input;
+    font-size: 1.5em;
+    font-family: Arial;
+}
+input {
+    font-family: Arial;
 }
 
 .streakBox {
