@@ -224,7 +224,7 @@ const listHandler = (function() {
             if(germanInput.value && englishInput.value) {
                 const question = createQuestion(getAnswersFromString(germanInput.value), getAnswersFromString(englishInput.value))
                 listQuestions.unshift(question)
-                listHandler.updateDisplay()
+                questionsSubPane.insertBefore(getQuestionElement(question), questionsSubPane.firstChild)
                 saveQuestionList(listName, listQuestions)
                 germanInput.value = ''
                 englishInput.value = ''
@@ -260,33 +260,91 @@ const listHandler = (function() {
     lockButton.addEventListener('click', () => {
         lockClicked = !lockClicked
         listQuestions.forEach(question => question.locked = lockClicked)
-        listHandler.updateDisplay()
+        listHandler.updateDisplay(false)
         saveQuestionList(listName, listQuestions)
     })
     findDuplicatesButton.addEventListener('click', () => {
-        let indices = []
-        // gather the indices at which questions with duplicate text exist
-        for(let i = 0; i < listQuestions.length - 1; i++) {
-            for(let j = i + 1; j < listQuestions.length; j++) {
-                const englishIsSame = listQuestions[i].english.join(', ') == listQuestions[j].english.join(', ')
-                const germanIsSame = listQuestions[i].german.join(', ') == listQuestions[j].german.join(', ')
-                
-                if(englishIsSame || germanIsSame) {
-                    indices.unshift(i, j)
+        const seenGerman = {}
+        const seenEnglish = {}
+        const duplicateQuestions = []
+        console.log(listQuestions.length)
+        listQuestions.forEach(question => {
+            for(const value of question.german) seenGerman[value] = (seenGerman[value] + 1 || 1)
+            for(const value of question.english) {
+                seenEnglish[value] = (seenEnglish[value] + 1 || 1)
+            }
+        })
+        console.log(seenEnglish)
+        for(let i = listQuestions.length - 1; i >= 0; i--) {
+            for(const value of listQuestions[i].german) {
+                if(seenGerman[value] > 1) {
+                    // if(listQuestions[i] == undefined) console.log(i, listQuestions)
+                    duplicateQuestions.push(listQuestions.splice(i, 1)[0])
+                    continue
+                }
+            }
+            if(listQuestions[i]) {
+                for(const value of listQuestions[i].english) if(seenEnglish[value] > 1) {
+                    duplicateQuestions.push(listQuestions.splice(i, 1)[0])
+                    continue
                 }
             }
         }
-        // move all of these questions to the front of the list
-        indices = removeDuplicates(indices)
-        indices.forEach(index => {
-            const question = listQuestions.splice(index, 1)[0]
-            listQuestions.unshift(question)
-        })
-        listHandler.updateDisplay()
+        console.log(duplicateQuestions)
+        listQuestions.unshift(...duplicateQuestions)
+        console.log(listQuestions.length, listQuestions)
+
+        // let indices = []
+        // // gather the indices at which questions with duplicate text exist
+        // for(let i = listQuestions.length - 1; i >= 1; i--) {
+        //     const questions = []
+        //     let wasSame = false
+        //     for(let j = i - 1; j >= 0; j--) {
+        //         // const englishIsSame = listQuestions[i].english.join(', ') == listQuestions[j].english.join(', ')
+        //         // const germanIsSame = listQuestions[i].german.join(', ') == listQuestions[j].german.join(', ')
+        //         let isSame = false
+        //         listQuestions[i].english.forEach(e => {
+        //             if(listQuestions[j].english.includes(e)) {
+        //                 wasSame = isSame = true
+        //                 console.log(listQuestions[i], listQuestions[j])
+        //             }
+        //         })
+        //         listQuestions[i].german.forEach(e => {
+        //             if(listQuestions[j].german.includes(e)) {
+        //                 wasSame = isSame = true
+        //                 console.log(listQuestions[i], e)
+        //             }
+        //         })
+        //         if(isSame) questions.push(listQuestions.slice(j, 1))
+
+        //         // for(let k = 0; k < listQuestions[i].english.length; k++) {
+        //         //     if(sanitise(listQuestions[j].english).includes(sanitise(listQuestions[i].english[k]))
+        //         //     || sanitise(listQuestions[j].german).includes(sanitise(listQuestions[i].german[k]))) {
+        //         //         isSame = true
+        //         //         console.log(listQuestions[j].english, listQuestions[i].english[k])
+        //         //         break
+        //         //     }
+        //         // }
+
+        //     }
+        //     if(wasSame) {
+        //         questions.push(listQuestions.slice(i, 1))
+
+        //     }
+        // }
+        // // move all of these questions to the front of the list
+        // indices = removeDuplicates(indices).sort()
+        // indices.forEach(index => {
+        //     const x = listQuestions.splice(index, 1)[0]
+        //     listQuestions.unshift(x)
+        // })
+
+
+        listHandler.updateDisplay(false)
         // add a separator after the recently shifted elements to make the distinction clear
         const separator = document.createElement('div')
         separator.className = 'questionPreview'
-        questionsSubPane.insertBefore(separator, document.querySelectorAll('.questionPreview')[indices.length])
+        questionsSubPane.insertBefore(separator, document.querySelectorAll('.questionPreview')[duplicateQuestions.length])
     })
 
 
@@ -300,8 +358,7 @@ const listHandler = (function() {
             // saveQuestionList('questions.json', questions)
         },
         // sets the percentage learned icon to its appropriate value and show a preview of the questions
-        updateDisplay() {
-            const listPreviewHeaderSubPane = document.querySelector('.sbHeader')
+        updateDisplay(sort = true) {
             const totals = getCompletionPercentage(listQuestions)
             germanButton.textContent = totals.german
             englishButton.textContent = totals.english
@@ -311,14 +368,20 @@ const listHandler = (function() {
             // add question previews with those which have been answered wrong the most being placed first
             while(questionsSubPane.firstChild) questionsSubPane.removeChild(questionsSubPane.firstChild)
 
-            let sortedListQuestions
-            if(testingVariable) sortedListQuestions = listQuestions
-            else if(testingGerman) sortedListQuestions = listQuestions.sort((a, b) => b.wrongGerman - a.wrongGerman)
-            else sortedListQuestions = listQuestions.sort((a, b) => b.wrongEnglish - a.wrongEnglish)
-
-            sortedListQuestions.forEach(question => {
-                questionsSubPane.appendChild(getQuestionElement(question))
-            })
+            if(sort) {
+                let sortedListQuestions
+                if(testingVariable) sortedListQuestions = listQuestions
+                else if(testingGerman) sortedListQuestions = listQuestions.sort((a, b) => b.wrongGerman - a.wrongGerman)
+                else sortedListQuestions = listQuestions.sort((a, b) => b.wrongEnglish - a.wrongEnglish)  
+                sortedListQuestions.forEach(question => {
+                    questionsSubPane.appendChild(getQuestionElement(question))
+                })
+            }
+            else {
+                listQuestions.forEach(question => {
+                    questionsSubPane.appendChild(getQuestionElement(question))
+                })
+            }
         },
         get path() {
             return listName
