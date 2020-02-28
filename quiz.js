@@ -1,4 +1,5 @@
-const DEFAULTWEIGHT = 10
+const DEFAULTWEIGHT = 40
+const COMPLETIONWEIGHT = 1
 
 // setup the input to step through the iterator controlling the flow of the application
 let it
@@ -29,7 +30,7 @@ const questionProto = {
 
         // if question has been answered to completion, reduce priority
         if(this.correctAnswerStreak == this.difficulty) {
-            this.weighting = 1
+            this.weighting = COMPLETIONWEIGHT
             this.lastAnswered = Date.now()
         }
     },
@@ -94,7 +95,7 @@ const questionProto = {
             const distances = sanitise(arr).map(elem => levenshteinDistance(elem, sanitise(userInput)))
             for(let i = 0; i < arr.length; i++) {
                 // 20% difference between the user input and a potential answer is considered to be a possible typo
-                if(distances[i] / sanitise(arr)[i].length <= .2) wasTypo = true
+                if(distances[i] / sanitise(arr)[i].length <= .35) wasTypo = true
             }
         }
         if(this.german === question) testForTypos(this.english)
@@ -154,11 +155,11 @@ const getIterator = (function() {
     // checks to see whether all of the questions have been answered to the point at which they drop to low priority
     function areAllAnswered() {
         for(let i = 0; i < questions.length; i ++) {
-            if(!testingVariable && questions[i].weighting != 1) {
+            if(!testingVariable && questions[i].weighting != COMPLETIONWEIGHT) {
                 return false
             }
             if(testingVariable) {
-                if(questions[i].weightGerman != 1 || questions[i].weightEnglish != 1) {
+                if(questions[i].weightGerman != COMPLETIONWEIGHT || questions[i].weightEnglish != COMPLETIONWEIGHT) {
                     return false
                 }
             }
@@ -194,7 +195,7 @@ const getIterator = (function() {
                 const answerStatus = currentQuestion.isCorrectAnswer(userInput, currentQuestion.rawText)
                 if(answerStatus == ans.CORRECT) {
                     currentQuestion.answeredRight()
-                    if(currentQuestion.weighting == 10) currentQuestion.weighting += getWeightingTotal() * 0.25
+                    if(currentQuestion.weighting == DEFAULTWEIGHT) currentQuestion.weighting += getWeightingTotal() * 0.25
                     saveQuestionList(listHandler.path, questions)
                     setStreakVisual(currentQuestion.correctAnswerStreak, true)
                     // check if all questions have been answered
@@ -220,7 +221,8 @@ const getIterator = (function() {
                 else {
                     setInputPlaceholder('Incorrect. Press any key to continue')
                     output(`Correct answer:\n${currentQuestion.answerText}`)
-                    if(currentQuestion.weighting == 10) currentQuestion.weighting += getWeightingTotal() * 0.25
+                    if(currentQuestion.weighting == DEFAULTWEIGHT || currentQuestion.weighting == COMPLETIONWEIGHT)
+                        currentQuestion.weighting += getWeightingTotal() * 0.25
                     currentQuestion.answeredWrong()
                     saveQuestionList(listHandler.path, questions)
                     setStreakVisual(currentQuestion.correctAnswerStreak, true)
@@ -233,4 +235,3 @@ const getIterator = (function() {
     }
     return eventLoop
 })()
-

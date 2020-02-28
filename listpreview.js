@@ -12,10 +12,10 @@ const keys = Object.freeze({
 // for german, english, and overall
 function getCompletionPercentage(questions) {
     const totals = questions.reduce((total, question) => {
-        total.german += (question.weightGerman == 1)
-        total.english += (question.weightEnglish == 1)
-        total.both += (question.weightGerman == 1)
-        total.both += (question.weightEnglish == 1)
+        total.german += (question.weightGerman == COMPLETIONWEIGHT)
+        total.english += (question.weightEnglish == COMPLETIONWEIGHT)
+        total.both += (question.weightGerman == COMPLETIONWEIGHT)
+        total.both += (question.weightEnglish == COMPLETIONWEIGHT)
         return total
     }, { german: 0, english: 0, both: 0 }) 
     
@@ -78,14 +78,14 @@ const listHandler = (function() {
     // set all questions marked as answered which are ready for answering to the default weighting
     function refreshQuestionWeightings() {
         listQuestions.forEach(question => {
-            if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now() && question.weightGerman == 1) {
-                if(!question.locked && question.weightGerman == 1) {
+            if(question.lastAnsweredGerman + question.reanswerTimeGerman < Date.now() && question.weightGerman == COMPLETIONWEIGHT) {
+                if(!question.locked && question.weightGerman == COMPLETIONWEIGHT) {
                     question.reanswerTimeGerman = getNextTime(question.reanswerTimeGerman)
                 }
                 refreshQuestionGerman(question)
             }
-            if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now() && question.weightEnglish == 1) {
-                if(!question.locked && question.weightEnglish == 1) {
+            if(question.lastAnsweredEnglish + question.reanswerTimeEnglish < Date.now() && question.weightEnglish == COMPLETIONWEIGHT) {
+                if(!question.locked && question.weightEnglish == COMPLETIONWEIGHT) {
                     question.reanswerTimeEnglish = getNextTime(question.reanswerTimeEnglish)
                 }
                 refreshQuestionEnglish(question)
@@ -199,14 +199,14 @@ const listHandler = (function() {
         })
         element.appendChild(deleteButton)
 
-        if(testingGerman && question.weightGerman != 1) element.style.backgroundColor = '#faf8ca' // pale yellow
-        else if(!testingGerman && question.weightEnglish != 1) element.style.backgroundColor = '#faf8ca' // pale yellow
+        if(testingGerman && question.weightGerman != COMPLETIONWEIGHT) element.style.backgroundColor = '#faf8ca' // pale yellow
+        else if(!testingGerman && question.weightEnglish != COMPLETIONWEIGHT) element.style.backgroundColor = '#faf8ca' // pale yellow
         else element.style.backgroundColor = '#cffcdb' // pale green
 
         if(testingVariable) {
             element.style.backgroundColor = 'white'
-            german.style.backgroundColor = (question.weightGerman != 1 ? '#faf8ca' : '#cffcdb')
-            english.style.backgroundColor = (question.weightEnglish != 1 ? '#faf8ca' : '#cffcdb')
+            german.style.backgroundColor = (question.weightGerman != COMPLETIONWEIGHT ? '#faf8ca' : '#cffcdb')
+            english.style.backgroundColor = (question.weightEnglish != COMPLETIONWEIGHT ? '#faf8ca' : '#cffcdb')
         }
 
         return element
