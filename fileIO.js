@@ -4,13 +4,13 @@ const xlsx = require('node-xlsx')
 // helper function to make sure that a requested file will exist, even if empty
 function writeIfDoesntExist(filePath) {
     if(!fs.existsSync(`./lists/${filePath}`)) {
-        fs.writeFileSync(`./lists/${filePath}`, '', 'ascii')
+        fs.writeFileSync(`./lists/${filePath}`, '', 'utf8')
     }
 }
 // load a JSON file into an array of question objects
 function loadQuestionList(filePath) {
     writeIfDoesntExist(filePath)
-    const data = JSON.parse(fs.readFileSync(`./lists/${filePath}`, 'ascii'))
+    const data = JSON.parse(fs.readFileSync(`./lists/${filePath}`, 'utf8'))
     const questions = []
     data.forEach(q => questions.push(createQuestion(
         q.german, q.english, q.difficulty, q.weightGerman, q.weightEnglish, q.streakGerman, q.streakEnglish, q.reanswerTimeGerman, q.reanswerTimeEnglish, q.lastAnsweredGerman, q.lastAnsweredEnglish, q.locked, q.wrongGerman, q.wrongEnglish
@@ -19,8 +19,8 @@ function loadQuestionList(filePath) {
 }
 // save a question array to JSON file
 function saveQuestionList(filePath, questions, careful = false) {
-    if(!(careful && fs.fileExistsSync(`./lists/${filePath}`))) {
-        fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'ascii')
+    if(!(careful && fs.existsSync(`./lists/${filePath}`))) {
+        fs.writeFileSync(`./lists/${filePath}`, JSON.stringify(questions, null, 4), 'utf8')
     }
 }
 // read an excel table into an array of questions
