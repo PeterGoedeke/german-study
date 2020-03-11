@@ -27,6 +27,7 @@ function getCompletionPercentage(questions) {
 
 const listHandler = (function() {
     // variables to pass to the quiz mainLoop when start buton clicked
+    
     let listQuestions = []
     let listName
     let testingGerman = true
@@ -62,6 +63,7 @@ const listHandler = (function() {
         it.next()
     }
 
+    /*
     // functions to set a question's german or english status to ready to answer
     function refreshQuestionGerman(question) {
         question.weightGerman = DEFAULTWEIGHT
@@ -263,6 +265,7 @@ const listHandler = (function() {
         listHandler.updateDisplay(false)
         saveQuestionList(listName, listQuestions)
     })
+    
     findDuplicatesButton.addEventListener('click', () => {
         const seenGerman = {}
         const seenEnglish = {}
@@ -349,42 +352,90 @@ const listHandler = (function() {
 
 
     const questionsSubPane = document.querySelector('.questions')
-
+    */
     return {
         // allows the list of questions to be set by the pane handler when the active pane changes to the list preview pane
         assignList(questions, list) {
-            listQuestions = questions
-            listName = list
+            previewPane = new Vue({
+                el: '#previewPane',
+                data: {
+                    questions,
+                    name: list,
+                    testingGerman: true,
+                    testingVariable: false
+                },
+                components: {
+                    'question-component': QuestionPreviewComponent
+                }
+            })
             // saveQuestionList('questions.json', questions)
         },
         // sets the percentage learned icon to its appropriate value and show a preview of the questions
-        updateDisplay(sort = true) {
-            const totals = getCompletionPercentage(listQuestions)
-            germanButton.textContent = totals.german
-            englishButton.textContent = totals.english
-            variableButton.textContent = totals.both
-            refreshQuestionWeightings()
-
-            // add question previews with those which have been answered wrong the most being placed first
-            while(questionsSubPane.firstChild) questionsSubPane.removeChild(questionsSubPane.firstChild)
-
-            if(sort) {
-                let sortedListQuestions
-                if(testingVariable) sortedListQuestions = listQuestions
-                else if(testingGerman) sortedListQuestions = listQuestions.sort((a, b) => b.wrongGerman - a.wrongGerman)
-                else sortedListQuestions = listQuestions.sort((a, b) => b.wrongEnglish - a.wrongEnglish)  
-                sortedListQuestions.forEach(question => {
-                    questionsSubPane.appendChild(getQuestionElement(question))
-                })
-            }
-            else {
-                listQuestions.forEach(question => {
-                    questionsSubPane.appendChild(getQuestionElement(question))
-                })
-            }
-        },
         get path() {
             return listName
         }
     }
 })()
+let previewPane
+
+const QuestionPreviewComponent = {
+    props: ['question'],
+    methods: {
+        germanClicked: function() {
+            
+        },
+        toggleReanswerTime(goHigher) {
+            const oldValue = (testingGerman ? this.question.reanswerTimeGerman : this.question.reanswerTimeEnglish)
+            const newValue = (goHigher ? getNextTime(oldValue) : getPreviousTime(oldValue))
+            if(testingGerman) {
+                this.question.reanswerTimeGerman = newValue
+            }
+            else {
+                this.qustion.refreshQuestionEnglish = newValue
+            }
+        },
+        removeThis() {
+            console.log('hello')
+            this.$root.questions.splice(this.$root.questions.indexOf(this.question), 1)
+            console.log(this.$root.questions)
+        }
+    },
+    computed: {
+        color: function() {
+            // pale yellow
+            if(testingGerman && this.question.weightGerman != COMPLETIONWEIGHT) return '#faf8ca'
+            else if(!testingGerman && this.question.weightEnglish != COMPLETIONWEIGHT) return '#faf8ca'
+            // pale green
+            else return '#cffcdb'
+        },
+        wrongCount: function() {
+            if(testingVariable) return ''
+            return (testingGerman ? this.question.wrongGerman : this.question.wrongEnglish) || ''
+        },
+        displayGerman: function() {
+            return this.question.german.join(', ')
+        },
+        displayEnglish: function() {
+            return this.question.english.join(', ')
+        },
+        prettyReanswerTime: function() {
+            const raw = testingGerman ? this.question.reanswerTimeGerman : this.question.reanswerTimeEnglish
+            return getTimeLabel(raw)
+        }
+    },
+    template: `
+        <div class="questionPreview" v-bind:style="color">
+            <div class="wrongCounter">{{wrongCount}}</div>
+            <div class="questionText">{{displayGerman}}</div>
+            <div class="questionText">{{displayEnglish}}</div>
+            <div class="arrow" v-on:click="toggleReanswerTime(true)"></div>
+            <div class="intervalDisplay">{{prettyReanswerTime}}</div>
+            <div class="arrow" v-on:click="toggleReanswerTime(false)"></div>
+            <div class="lock"
+                v-bind:class="{isLocked: question.locked}"
+                v-on:click="question.locked = !question.locked"
+            ></div>
+            <div class="delete" v-on:click="removeThis"></div>
+        </div>
+    `
+}

@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <title>Vocabulary</title>
     <link href="main.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
     <div class="menuContainer">
@@ -35,7 +36,13 @@
             <div class="setGerman"><input></div>
             <div class="setEnglish"><input></div>
         </div>
-        <div class="questions"></div>
+        <div class="questions" id="previewPane">
+            <question-component
+                v-for="question in questions"
+                v-bind:key="question.id"
+                v-bind:question="question"
+            ></question-component>
+        </div>
         <div class="toolbar">
             <div class="deleteList">Delete</div>
             <div class="duplicateList">Duplicate</div>
