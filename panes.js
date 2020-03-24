@@ -69,6 +69,7 @@ const panes = (function() {
                 const questions = loadQuestionList(list)
                 listHandler.assignList(questions, list)
             }
+            listHandler.updateDisplay()
         },
         quiz() {
             currentPane = 'quiz'
