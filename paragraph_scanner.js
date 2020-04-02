@@ -1,5 +1,16 @@
 const request = require('request')
 
+// request('https://lt-translate-test.herokuapp.com/?langpair=en-de&query=complete', { json: true }, (err, res, body) => {
+//     if(err) return console.log(err)
+
+//     console.log(body)
+// })
+request('https://lt-translate-test.herokuapp.com/?langpair=en-de&query=change', { json: true }, (err, res, body) => {
+    if(err) return console.log(err)
+
+    console.log(body)
+})
+
 function getTranslation(srcLang, dstLang) {
     return function(word) {
         const path = `http://linguee-api.herokuapp.com/api?q=${word}&src=${srcLang}&dst=${dstLang}`
@@ -158,7 +169,7 @@ function run(counter = 0) {
     promises.push(deToEn(wordsArr[counter]))
     setTimeout(() => run(++counter), 100)
 }
-run()
+// run()
 
 
 // Promise.all(wordsArr.map(word => deToEn(word))).then(value => console.log(value))
