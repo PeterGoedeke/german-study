@@ -1,15 +1,33 @@
 const request = require('request')
 
+var unirest = require("unirest");
+
+var req = unirest("POST", "https://yandextranslatezakutynskyv1.p.rapidapi.com/detectLanguage");
+
+req.headers({
+	"x-rapidapi-host": "YandexTranslatezakutynskyV1.p.rapidapi.com",
+	"x-rapidapi-key": "2c7ac284eamsh3961e1d1a7b6bf9p111291jsnec95722489da",
+	"content-type": "application/x-www-form-urlencoded"
+});
+
+req.form({});
+
+req.end(function (res) {
+	if (res.error) throw new Error(res.error);
+
+	console.log(res.body);
+});
+
 // request('https://lt-translate-test.herokuapp.com/?langpair=en-de&query=complete', { json: true }, (err, res, body) => {
 //     if(err) return console.log(err)
 
 //     console.log(body)
 // })
-request('https://lt-translate-test.herokuapp.com/?langpair=en-de&query=change', { json: true }, (err, res, body) => {
-    if(err) return console.log(err)
+// request('https://lt-translate-test.herokuapp.com/?langpair=en-de&query=change', { json: true }, (err, res, body) => {
+//     if(err) return console.log(err)
 
-    console.log(body)
-})
+//     console.log(body)
+// })
 
 function getTranslation(srcLang, dstLang) {
     return function(word) {
