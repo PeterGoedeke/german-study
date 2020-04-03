@@ -5,7 +5,9 @@
   "main": "window.js",
   "dependencies": {
     "fs": "0.0.1-security",
-    "node-xlsx": "^0.15.0"
+    "node-xlsx": "^0.15.0",
+    "unirest": "^0.6.0",
+    "xregexp": "^4.3.0"
   },
   "devDependencies": {
     "electron": "^2.0.2",
