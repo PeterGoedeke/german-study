@@ -10,7 +10,7 @@
     "xregexp": "^4.3.0"
   },
   "devDependencies": {
-    "electron": "^2.0.2",
+    "electron": "^7.2.4",
     "electron-packager": "^12.1.0"
   },
   "electronPackagerConfig": {
